@@ -98,11 +98,12 @@ def _grid_bins(grid: str) -> Tuple[int, int]:
 
 def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_edges):
     line_color = "rgba(120,120,120,0.8)"
+    def _swap(x, y):
+        return (y, x) if orientation == "vertical" else (x, y)
     for y_val in x_edges:
-        if orientation == "vertical":
-            xs, ys = [y_min, y_max], [y_val, y_val]
-        else:
-            xs, ys = [y_val, y_val], [y_min, y_max]
+        (x0, y0) = _swap(y_min, y_val)
+        (x1, y1) = _swap(y_max, y_val)
+        xs, ys = [x0, x1], [y0, y1]
         fig.add_trace(go.Scatter(
             x=xs,
             y=ys,
@@ -112,10 +113,9 @@ def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_ed
             showlegend=False,
         ))
     for x_val in y_edges:
-        if orientation == "vertical":
-            xs, ys = [x_val, x_val], [x_min, x_max]
-        else:
-            xs, ys = [x_min, x_max], [x_val, x_val]
+        (x0, y0) = _swap(x_val, x_min)
+        (x1, y1) = _swap(x_val, x_max)
+        xs, ys = [x0, x1], [y0, y1]
         fig.add_trace(go.Scatter(
             x=xs,
             y=ys,
@@ -228,12 +228,12 @@ def _build_full_pitch_line_traces(orientation="vertical"):
     px, py = _swap(0, X_MAX - 11.0)
     traces.append(go.Scatter(x=[px], y=[py], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
 
-    gx, gy = _swap(-3.66, X_MIN - 0.2)
-    gx2, gy2 = _swap(3.66, X_MIN - 0.2)
+    gx, gy = _swap(-3.66, X_MIN)
+    gx2, gy2 = _swap(3.66, X_MIN)
     traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
 
-    gx, gy = _swap(-3.66, X_MAX + 0.2)
-    gx2, gy2 = _swap(3.66, X_MAX + 0.2)
+    gx, gy = _swap(-3.66, X_MAX)
+    gx2, gy2 = _swap(3.66, X_MAX)
     traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
 
     return traces
@@ -399,17 +399,7 @@ def build_canvas(
     for trace in base_traces:
         fig.add_trace(trace)
 
-    grid_key = str(grid).lower().strip() if grid is not None else ""
-    if x_bins > 0 and y_bins > 0:
-        x_edges = np.linspace(x_min, x_max, x_bins + 1)
-        y_edges = np.linspace(Y_MIN, Y_MAX, y_bins + 1)
-        _draw_grid_lines(fig, x_min, x_max, Y_MIN, Y_MAX, orientation, x_edges, y_edges)
-    elif grid_key in ("own third", "own_third", "own-third", "middle third", "middle_third", "middle-third", "final third", "final_third", "final-third"):
-        third = (X_MAX - X_MIN) / 3.0
-        x_edges = [X_MIN + third, X_MIN + 2 * third]
-        _draw_grid_lines(fig, x_min, x_max, Y_MIN, Y_MAX, orientation, x_edges, [])
-    elif grid_key == "set piece":
-        _draw_set_piece_grid(fig, orientation)
+    # Grid disabled for now: focus on pitch sizing/shape only.
 
     filtercontent = filtercontent or []
     filtertype = filtertype or []
@@ -422,9 +412,10 @@ def build_canvas(
     values = ["All"]
     buttons = [dict(label="All", method="update", args=[{"visible": [True] * len(fig.data)}])]
 
+    is_full = pitch == "full"
     fig.update_layout(
         width=520,
-        height=520,
+        height=700 if is_full else 520,
         margin=dict(l=10, r=10, t=40, b=20),
         plot_bgcolor="white",
         paper_bgcolor="white",
@@ -462,19 +453,19 @@ def build_canvas(
 
     if orientation == "vertical":
         fig.update_xaxes(range=[Y_MAX, Y_MIN], autorange=False, visible=False, fixedrange=True)
-        if pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
-            fig.update_yaxes(range=[-5.0, X_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
-        elif pitch in ("own half", "own_half", "own-half"):
+        if pitch in ("own half", "own_half", "own-half"):
             fig.update_yaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
+        elif pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
+            fig.update_yaxes(range=[X_MAX, -5.0], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
         else:
-            fig.update_yaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
+            fig.update_yaxes(range=[X_MIN, X_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
     else:
-        if pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
-            fig.update_xaxes(range=[-5.0, X_MAX], autorange=False, visible=False, fixedrange=True)
-        elif pitch in ("own half", "own_half", "own-half"):
+        if pitch in ("own half", "own_half", "own-half"):
             fig.update_xaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True)
+        elif pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
+            fig.update_xaxes(range=[X_MAX, -5.0], autorange=False, visible=False, fixedrange=True)
         else:
-            fig.update_xaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[X_MIN, X_MAX], autorange=False, visible=False, fixedrange=True)
         fig.update_yaxes(range=[Y_MIN, Y_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
 
     return fig

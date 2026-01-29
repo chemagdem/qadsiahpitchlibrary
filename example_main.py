@@ -70,11 +70,11 @@ if __name__ == "__main__":
             return self.json_data
 
     test_body = {
-        "provider": "impect",
+        "provider": "statsbomb",
         "pitch": "full",
         "orientation": "horizontal",
         "grid": "5x3",
-        "filtertype": "dropdown",
+        "filtertype": ["dropdown", "dropdown"],
         "filtercontent": "playerName",
         "output": "html",
     }
