@@ -33,6 +33,7 @@ Notes:
 
 ```json
 {
+  "provider": "impect",
   "pitch": "own third",
   "orientation": "vertical",
   "grid": "3x3",
