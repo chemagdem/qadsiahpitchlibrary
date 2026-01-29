@@ -2,7 +2,7 @@ import json
 import traceback
 
 import functions_framework
-from flask import Request, make_response
+from flask import Request, make_response, Flask
 
 from qadsiahpitch import build_canvas
 
@@ -79,5 +79,27 @@ if __name__ == "__main__":
         "output": "html",
     }
 
-    resp = example_canvas(MockRequest(test_body))
-    print(resp)
+    app = Flask(__name__)
+    with app.app_context():
+        resp = example_canvas(MockRequest(test_body))
+        print(resp)
+        try:
+            if hasattr(resp, "data"):
+                payload = json.loads(resp.data)
+                html = payload.get("data")
+                if html:
+                    with open("canvas_test.html", "w", encoding="utf-8") as f:
+                        f.write(html)
+                    print("Saved: canvas_test.html")
+        except Exception as save_err:
+            print(f"⚠️ Could not save HTML: {save_err}")
+        try:
+            if hasattr(resp, "data"):
+                payload = json.loads(resp.data)
+                html = payload.get("data")
+                if html:
+                    with open("canvas_test.html", "w", encoding="utf-8") as f:
+                        f.write(html)
+                    print("Saved: canvas_test.html")
+        except Exception as save_err:
+            print(f"⚠️ Could not save HTML: {save_err}")
