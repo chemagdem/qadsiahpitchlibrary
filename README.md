@@ -38,5 +38,3 @@ Notes:
   "filtercontent": "playerName"
 }
 ```
-
-

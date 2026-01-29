@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qadsiahpitch"
+version = "0.1.0"
+description = "Agnostic football pitch canvas builder for Plotly."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "plotly",
+    "google-cloud-bigquery",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["qadsiahpitch*"]
