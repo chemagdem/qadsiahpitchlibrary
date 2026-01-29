@@ -15,7 +15,6 @@ Pitch / layout:
 - `pitch`: `"full"`, `"own half"`, `"opp half"`
 - `orientation`: `"horizontal"` or `"vertical"`
 - `grid`: `"5x3"`, `"3x3"`, `"5x5"`, `"set piece"`, `"own third"`, `"middle third"`, `"final third"` or `null`
-- `against`: `0` or `1`
 
 Filters:
 - `filtertype`: `"dropdown"` or `"slider"`  
@@ -36,8 +35,8 @@ Notes:
   "orientation": "vertical",
   "grid": "3x3",
   "filtertype": "dropdown",
-  "filtercontent": "playerName",
-  "against": 0
+  "filtercontent": "playerName"
 }
 ```
+
 
