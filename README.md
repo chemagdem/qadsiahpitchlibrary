@@ -4,6 +4,15 @@ Lightweight library for building agnostic football pitch maps in Plotly. It stan
 
 ## Parameters (schema)
 
+
+Provider:
+- `provider`: `"impect"`, `"skillcorner"`, `"statsbomb"`
+  - Impect: x [-52.5, 52.5], y [-34, 34]
+  - StatsBomb: x [0, 120], y [0, 80]
+  - SkillCorner: (define per project; add mapping when known)
+  - The canvas uses the provider dimensions you pass/implement.
+
+
 Pitch / layout:
 - `pitch`: `"full"`, `"own half"`, `"opp half"`, `"own third"`, `"opp third"`
 - `orientation`: `"horizontal"` or `"vertical"`
