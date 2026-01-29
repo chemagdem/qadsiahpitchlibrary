@@ -195,33 +195,183 @@ def _build_full_pitch_line_traces(orientation="vertical"):
     sx, sy = _swap(0, 0)
     traces.append(go.Scatter(x=[sx], y=[sy], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
 
+    area_w = 40.32
+    area_d = 16.5
+    small_w = 18.32
+    small_d = 5.5
+
+    # Bottom penalty area
+    rect = [(-area_w / 2, X_MIN), (area_w / 2, X_MIN), (area_w / 2, X_MIN + area_d),
+            (-area_w / 2, X_MIN + area_d), (-area_w / 2, X_MIN)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    rect = [(-small_w / 2, X_MIN), (small_w / 2, X_MIN), (small_w / 2, X_MIN + small_d),
+            (-small_w / 2, X_MIN + small_d), (-small_w / 2, X_MIN)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    px, py = _swap(0, X_MIN + 11.0)
+    traces.append(go.Scatter(x=[px], y=[py], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
+
+    # Top penalty area
+    rect = [(-area_w / 2, X_MAX - area_d), (area_w / 2, X_MAX - area_d), (area_w / 2, X_MAX),
+            (-area_w / 2, X_MAX), (-area_w / 2, X_MAX - area_d)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    rect = [(-small_w / 2, X_MAX - small_d), (small_w / 2, X_MAX - small_d), (small_w / 2, X_MAX),
+            (-small_w / 2, X_MAX), (-small_w / 2, X_MAX - small_d)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    px, py = _swap(0, X_MAX - 11.0)
+    traces.append(go.Scatter(x=[px], y=[py], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
+
+    gx, gy = _swap(-3.66, X_MIN - 0.2)
+    gx2, gy2 = _swap(3.66, X_MIN - 0.2)
+    traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    gx, gy = _swap(-3.66, X_MAX + 0.2)
+    gx2, gy2 = _swap(3.66, X_MAX + 0.2)
+    traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
     return traces
 
 
-def _build_half_pitch_line_traces(x_min: float, x_max: float, orientation="vertical"):
+def _build_half_pitch_line_traces_defensive(extend_center=6.0):
     traces = []
     line_color = "black"
-
-    def _swap(x, y):
-        return (y, x) if orientation == "vertical" else (x, y)
-
-    outline = [(Y_MIN, x_min), (Y_MAX, x_min), (Y_MAX, x_max), (Y_MIN, x_max), (Y_MIN, x_min)]
-    xs, ys = zip(*[_swap(x, y) for x, y in outline])
-    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
-
-    if abs(x_max) < 1e-6 or abs(x_min) < 1e-6:
-        xh, yh = _swap(Y_MIN, 0)
-        xh2, yh2 = _swap(Y_MAX, 0)
-        traces.append(go.Scatter(x=[xh, xh2], y=[yh, yh2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
-
+    outline_x = [Y_MIN, Y_MAX, Y_MAX, Y_MIN, Y_MIN]
+    outline_y = [X_MIN, X_MIN, 0, 0, X_MIN]
+    traces.append(go.Scatter(
+        x=outline_x, y=outline_y, mode="lines",
+        line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[Y_MIN, Y_MAX], y=[0, 0], mode="lines",
+        line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+    ))
+    if extend_center > 0:
+        traces.append(go.Scatter(
+            x=[Y_MIN, Y_MIN], y=[0, extend_center], mode="lines",
+            line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+        ))
+        traces.append(go.Scatter(
+            x=[Y_MAX, Y_MAX], y=[0, extend_center], mode="lines",
+            line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+        ))
+    traces.append(go.Scatter(
+        x=[-20.16, 20.16, 20.16, -20.16, -20.16],
+        y=[X_MIN, X_MIN, X_MIN + 16.5, X_MIN + 16.5, X_MIN],
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[-9.16, 9.16, 9.16, -9.16, -9.16],
+        y=[X_MIN, X_MIN, X_MIN + 5.5, X_MIN + 5.5, X_MIN],
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[0],
+        y=[X_MIN + 11.0],
+        mode="markers",
+        marker=dict(size=4, color="black"),
+        hoverinfo="skip",
+        showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[-3.66, 3.66],
+        y=[X_MIN - 0.2, X_MIN - 0.2],
+        mode="lines",
+        line=dict(color=line_color, width=1),
+        hoverinfo="skip",
+        showlegend=False
+    ))
     circle_t = np.linspace(0, 2 * np.pi, 200)
-    cx = np.cos(circle_t) * 9.15
-    cy = np.sin(circle_t) * 9.15
-    cx2, cy2 = _swap(cx, cy)
-    traces.append(go.Scatter(x=cx2, y=cy2, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
-    sx, sy = _swap(0, 0)
-    traces.append(go.Scatter(x=[sx], y=[sy], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
+    traces.append(go.Scatter(
+        x=np.cos(circle_t) * 9.15,
+        y=np.sin(circle_t) * 9.15,
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[0],
+        y=[0],
+        mode="markers",
+        marker=dict(size=4, color="black"),
+        hoverinfo="skip",
+        showlegend=False
+    ))
+    return traces
 
+
+def _build_half_pitch_line_traces_attacking(extend_center=6.0):
+    traces = []
+    line_color = "black"
+    outline_x = [Y_MIN, Y_MAX, Y_MAX, Y_MIN, Y_MIN]
+    outline_y = [0, 0, X_MAX, X_MAX, 0]
+    traces.append(go.Scatter(
+        x=outline_x, y=outline_y, mode="lines",
+        line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[Y_MIN, Y_MAX], y=[0, 0], mode="lines",
+        line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+    ))
+    if extend_center > 0:
+        traces.append(go.Scatter(
+            x=[Y_MIN, Y_MIN], y=[0, -extend_center], mode="lines",
+            line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+        ))
+        traces.append(go.Scatter(
+            x=[Y_MAX, Y_MAX], y=[0, -extend_center], mode="lines",
+            line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False
+        ))
+    traces.append(go.Scatter(
+        x=[-20.16, 20.16, 20.16, -20.16, -20.16],
+        y=[X_MAX - 16.5, X_MAX - 16.5, X_MAX, X_MAX, X_MAX - 16.5],
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[-9.16, 9.16, 9.16, -9.16, -9.16],
+        y=[X_MAX - 5.5, X_MAX - 5.5, X_MAX, X_MAX, X_MAX - 5.5],
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[0],
+        y=[X_MAX - 11.0],
+        mode="markers",
+        marker=dict(size=4, color="black"),
+        hoverinfo="skip",
+        showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[-3.66, 3.66],
+        y=[X_MAX + 0.2, X_MAX + 0.2],
+        mode="lines",
+        line=dict(color=line_color, width=1),
+        hoverinfo="skip",
+        showlegend=False
+    ))
+    circle_t = np.linspace(0, 2 * np.pi, 200)
+    traces.append(go.Scatter(
+        x=np.cos(circle_t) * 9.15,
+        y=np.sin(circle_t) * 9.15,
+        mode="lines", line=dict(color=line_color, width=1),
+        hoverinfo="skip", showlegend=False
+    ))
+    traces.append(go.Scatter(
+        x=[0],
+        y=[0],
+        mode="markers",
+        marker=dict(size=4, color="black"),
+        hoverinfo="skip",
+        showlegend=False
+    ))
     return traces
 
 
@@ -241,8 +391,10 @@ def build_canvas(
     base_traces = []
     if pitch == "full":
         base_traces.extend(_build_full_pitch_line_traces(orientation=orientation))
+    elif pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
+        base_traces.extend(_build_half_pitch_line_traces_attacking(extend_center=6.0))
     else:
-        base_traces.extend(_build_half_pitch_line_traces(x_min, x_max, orientation=orientation))
+        base_traces.extend(_build_half_pitch_line_traces_defensive(extend_center=6.0))
 
     for trace in base_traces:
         fig.add_trace(trace)
@@ -310,9 +462,19 @@ def build_canvas(
 
     if orientation == "vertical":
         fig.update_xaxes(range=[Y_MAX, Y_MIN], autorange=False, visible=False, fixedrange=True)
-        fig.update_yaxes(range=[x_min, x_max], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
+        if pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
+            fig.update_yaxes(range=[-5.0, X_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
+        elif pitch in ("own half", "own_half", "own-half"):
+            fig.update_yaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
+        else:
+            fig.update_yaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
     else:
-        fig.update_xaxes(range=[x_min, x_max], autorange=False, visible=False, fixedrange=True)
+        if pitch in ("opp half", "opponent half", "opp_half", "opp-half"):
+            fig.update_xaxes(range=[-5.0, X_MAX], autorange=False, visible=False, fixedrange=True)
+        elif pitch in ("own half", "own_half", "own-half"):
+            fig.update_xaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True)
+        else:
+            fig.update_xaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True)
         fig.update_yaxes(range=[Y_MIN, Y_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
 
     return fig
