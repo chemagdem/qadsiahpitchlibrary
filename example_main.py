@@ -1,9 +1,12 @@
 import json
 import traceback
+import os
+import sys
 
 import functions_framework
 from flask import Request, make_response, Flask
 
+sys.path.insert(0, os.path.dirname(__file__))
 from qadsiahpitch import build_canvas
 
 
@@ -71,7 +74,7 @@ if __name__ == "__main__":
 
     test_body = {
         "provider": "impect",
-        "pitch": "own half",
+        "pitch": "opp half",
         "orientation": "vertical",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
