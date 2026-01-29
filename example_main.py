@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     test_body = {
         "provider": "impect",
-        "pitch": "own half",
+        "pitch": "opp half",
         "orientation": "vertical",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
