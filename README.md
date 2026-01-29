@@ -9,7 +9,7 @@ Provider:
 - `provider`: `"impect"`, `"skillcorner"`, `"statsbomb"`
   - Impect: x [-52.5, 52.5], y [-34, 34]
   - StatsBomb: x [0, 120], y [0, 80]
-  - SkillCorner: (define per project; add mapping when known)
+  - SkillCorner: x [-52.5, 52.5], y [-34, 34] (same as Impect)
   - The canvas uses the provider dimensions you pass/implement.
 
 
