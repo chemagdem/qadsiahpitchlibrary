@@ -72,7 +72,7 @@ if __name__ == "__main__":
     test_body = {
         "provider": "impect",
         "pitch": "full",
-        "orientation": "vertical",
+        "orientation": "horizontal",
         "grid": "5x3",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
