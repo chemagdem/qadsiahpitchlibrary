@@ -364,6 +364,7 @@ def add_event_markers(
             opacity=opacity,
             hoverinfo="skip",
             showlegend=False,
+            name="event-arrow",
         )
         fig.add_scatter(
             x=[_map_xy(x, y)[0] for x, y in zip(df["x_end"], df["y_end"])],
@@ -373,6 +374,7 @@ def add_event_markers(
             opacity=opacity,
             hoverinfo="skip",
             showlegend=False,
+            name="event-dot",
         )
         return
 
@@ -383,6 +385,7 @@ def add_event_markers(
         marker=dict(size=marker_size, color=marker_color, line=dict(color="black", width=0.5), opacity=opacity),
         hoverinfo="skip",
         showlegend=False,
+        name="event-point",
     )
 
 def _build_full_pitch_line_traces(orientation="vertical"):

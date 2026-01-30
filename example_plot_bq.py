@@ -147,14 +147,18 @@ def plot_from_bq(body: Dict) -> Any:
     markertype = body.get("markertype", "point")
     base_count = len(fig.data)
     players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
+    trace_by_player = []
     for player in players:
         df_player = df[df["playerName"] == player]
+        before = len(fig.data)
         add_event_markers(
             fig=fig,
             df=df_player,
             orientation=orientation,
             markertype=markertype,
         )
+        added = len(fig.data) - before
+        trace_by_player.extend([player] * added)
 
     if (body.get("filtertype") or "dropdown") == "dropdown" and players:
         buttons = []
@@ -163,7 +167,7 @@ def plot_from_bq(body: Dict) -> Any:
         def _vis_for_player(name: str):
             vis = [True] * base_count
             for idx in range(base_count, total_traces):
-                vis.append(players[idx - base_count] == name)
+                vis.append(trace_by_player[idx - base_count] == name)
             return vis
 
         buttons.append(dict(label="All", method="update", args=[{"visible": [True] * total_traces}]))
