@@ -1,20 +1,22 @@
 # qadsiahpitch
 
-Lightweight library for building agnostic football pitch maps in Plotly. It standardizes match filtering, team selection (against), grid heatmaps, and player/event points, with provider adapters (Impect/SkillCorner/StatsBomb). Supports pitch regions, orientation, and filter UI (dropdown/slider).
+Lightweight library for building Plotly football pitch canvases. It focuses on pitch geometry, orientation, and grid overlays, plus a basic filter UI (dropdown/slider). Data traces are added by the caller.
 
 ## Parameters (schema)
 
 Provider:
 - `provider`: `"impect"`, `"skillcorner"`, `"statsbomb"`
-  - Impect: x [-52.5, 52.5], y [-34, 34]
+  - Impect/SkillCorner: x [-52.5, 52.5], y [-34, 34]
   - StatsBomb: x [0, 120], y [0, 80]
-  - SkillCorner: x [-52.5, 52.5], y [-34, 34]
-  - The canvas uses the provider dimensions you pass/implement.
 
 Pitch / layout:
 - `pitch`: `"full"`, `"own half"`, `"opp half"`
 - `orientation`: `"horizontal"` or `"vertical"`
-- `grid`: `"5x3"`, `"3x3"`, `"5x5"`, `"set piece"`, `"own third"`, `"middle third"`, `"final third"` or `null`
+- `grid`:
+  - `"none"` / `null`
+  - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
+  - `"set piece"`
+  - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
 Filters:
 - `filtertype`: `"dropdown"` or `"slider"`  
@@ -25,15 +27,17 @@ Filters:
 Notes:
 - This library only builds the pitch + grid + filter UI (canvas).  
   You add the data traces separately.
+- Grid lines are always gray with 80% opacity (`rgba(120,120,120,0.8)`).
+- Impect and SkillCorner share the same pitch dimensions and layout rules.
 
 ## Example payload
 
 ```json
 {
-  "provider": "impect",
-  "pitch": "own third",
+  "provider": "skillcorner",
+  "pitch": "own half",
   "orientation": "vertical",
-  "grid": "3x3",
+  "grid": "own third",
   "filtertype": "dropdown",
   "filtercontent": "playerName"
 }
