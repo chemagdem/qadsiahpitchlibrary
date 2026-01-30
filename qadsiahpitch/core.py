@@ -85,6 +85,37 @@ def parse_metric_filters(raw_metric):
     return metrics, filters
 
 
+def resolve_coord_columns(provider: str) -> Dict[str, str]:
+    p = (provider or "impect").strip().lower()
+    if p == "skillcorner":
+        return {
+            "start_x": "x_start",
+            "start_y": "y_start",
+            "end_x": "x_end",
+            "end_y": "y_end",
+        }
+    if p == "impect":
+        return {
+            "start_x": "startAdjCoordinatesX",
+            "start_y": "startAdjCoordinatesY",
+            "end_x": "endAdjCoordinatesX",
+            "end_y": "endAdjCoordinatesY",
+        }
+    if p == "statsbomb":
+        return {
+            "start_x": "x",
+            "start_y": "y",
+            "end_x": "end_x",
+            "end_y": "end_y",
+        }
+    return {
+        "start_x": "startAdjCoordinatesX",
+        "start_y": "startAdjCoordinatesY",
+        "end_x": "endAdjCoordinatesX",
+        "end_y": "endAdjCoordinatesY",
+    }
+
+
 def resolve_match_ids(
     client: bigquery.Client,
     request_json: dict,

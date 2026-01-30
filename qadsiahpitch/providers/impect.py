@@ -12,6 +12,7 @@ def fetch_events_impect(
     squad_ids: List[int],
     metrics: List[str],
     filters: Optional[Dict[str, List[str]]] = None,
+    coord_columns: Optional[Dict[str, str]] = None,
 ) -> pd.DataFrame:
     if not match_ids:
         return pd.DataFrame()
@@ -43,11 +44,18 @@ def fetch_events_impect(
                 params.append(bigquery.ArrayQueryParameter(param_name, "STRING", vals))
             filter_clause = "AND " + " AND ".join(parts)
 
+    start_x = (coord_columns or {}).get("start_x", "startAdjCoordinatesX")
+    start_y = (coord_columns or {}).get("start_y", "startAdjCoordinatesY")
+    end_x = (coord_columns or {}).get("end_x", "endAdjCoordinatesX")
+    end_y = (coord_columns or {}).get("end_y", "endAdjCoordinatesY")
+
     query = f"""
         SELECT
             CAST(matchId AS INT64) AS match_id,
-            CAST(startAdjCoordinatesX AS FLOAT64) AS x,
-            CAST(startAdjCoordinatesY AS FLOAT64) AS y,
+            CAST({start_x} AS FLOAT64) AS x,
+            CAST({start_y} AS FLOAT64) AS y,
+            CAST({end_x} AS FLOAT64) AS x_end,
+            CAST({end_y} AS FLOAT64) AS y_end,
             CAST(squadId AS INT64) AS squad_id,
             playerName,
             CAST(playerId AS INT64) AS playerId,
@@ -55,8 +63,8 @@ def fetch_events_impect(
             {metrics_sql}
         FROM {events_table}
         WHERE CAST(matchId AS INT64) IN UNNEST(@matchIds)
-          AND startAdjCoordinatesX IS NOT NULL
-          AND startAdjCoordinatesY IS NOT NULL
+          AND {start_x} IS NOT NULL
+          AND {start_y} IS NOT NULL
           {squad_clause}
           {filter_clause}
     """

@@ -5,8 +5,14 @@ import numpy as np
 import pandas as pd
 from google.cloud import bigquery
 
-from qadsiahpitch.core import parse_list, parse_metric_filters, resolve_match_ids, resolve_analysis_team_ids
-from qadsiahpitch.plot import build_canvas, add_grid_heatmap
+from qadsiahpitch.core import (
+    parse_list,
+    parse_metric_filters,
+    resolve_match_ids,
+    resolve_analysis_team_ids,
+    resolve_coord_columns,
+)
+from qadsiahpitch.plot import build_canvas, add_grid_heatmap, add_event_markers
 from qadsiahpitch.providers.impect import fetch_events_impect
 
 PROJECT_ID = "prj-alqadsiahplatforms-0425"
@@ -84,6 +90,7 @@ def plot_from_bq(body: Dict) -> Any:
     if provider != "impect":
         raise ValueError("Este ejemplo solo implementa provider=impect.")
 
+    coord_columns = resolve_coord_columns(provider)
     df = fetch_events_impect(
         client=client,
         events_table=T_EVENTS,
@@ -91,6 +98,7 @@ def plot_from_bq(body: Dict) -> Any:
         squad_ids=analysis_team_ids,
         metrics=metrics,
         filters=filters,
+        coord_columns=coord_columns,
     )
     if match_ids:
         df = df[df["match_id"].isin([int(m) for m in match_ids])]
@@ -136,27 +144,16 @@ def plot_from_bq(body: Dict) -> Any:
     )
     print(f"[DEBUG] grid heatmap: {grid_debug}")
 
+    markertype = body.get("markertype", "point")
     base_count = len(fig.data)
     players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
     for player in players:
         df_player = df[df["playerName"] == player]
-        x_plot, y_plot = _map_points_for_orientation(df_player, orientation)
-        fig.add_scatter(
-            x=x_plot,
-            y=y_plot,
-            mode="markers",
-            marker=dict(size=7, color="#4a4a4a", line=dict(color="black", width=0.5), opacity=0.7),
-            hovertemplate="Player: %{customdata[0]}<br>Minute: %{customdata[1]:.1f}<extra></extra>",
-            customdata=list(
-                map(
-                    list,
-                    zip(
-                        df_player.get("playerName", pd.Series([""] * len(df_player))).astype(str),
-                        _game_minute(df_player.get("gameTimeInSec", pd.Series([0.0] * len(df_player)))),
-                    ),
-                )
-            ),
-            showlegend=False,
+        add_event_markers(
+            fig=fig,
+            df=df_player,
+            orientation=orientation,
+            markertype=markertype,
         )
 
     if (body.get("filtertype") or "dropdown") == "dropdown" and players:
@@ -192,7 +189,7 @@ def plot_from_bq(body: Dict) -> Any:
 if __name__ == "__main__":
     test_body = {
         "provider": "impect",
-        "pitch": "opp half",
+        "pitch": "full",
         "orientation": "vertical",
         "grid": "5x5",
         "filtertype": "dropdown",
@@ -200,7 +197,8 @@ if __name__ == "__main__":
         "squadId": 5067,
         "matchIds": 228025,
         "against": 0,
-        "metric": ["FROM actionType import SHOT"],
+        "metric": ["FROM actionType import PASS"],
+        "markertype": "arrow",
     }
 
     print(f"[DEBUG] test_body pitch={test_body.get('pitch')} grid={test_body.get('grid')}")

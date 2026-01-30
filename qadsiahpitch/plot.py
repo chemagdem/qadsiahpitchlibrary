@@ -325,6 +325,66 @@ def add_grid_heatmap(
     )
     return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
 
+
+def add_event_markers(
+    fig: go.Figure,
+    df: pd.DataFrame,
+    orientation: str,
+    markertype: str = "point",
+    line_color: str = "#4a4a4a",
+    line_width: float = 1.5,
+    marker_color: str = "#4a4a4a",
+    marker_size: int = 7,
+    opacity: float = 0.7,
+):
+    if df.empty:
+        return
+    markertype = (markertype or "point").strip().lower()
+
+    def _map_xy(x, y):
+        if orientation == "vertical":
+            return y, x
+        return x, y
+
+    if markertype == "arrow":
+        if "x_end" not in df.columns or "y_end" not in df.columns:
+            return
+        xs = []
+        ys = []
+        for _, row in df.iterrows():
+            x0, y0 = _map_xy(row["x"], row["y"])
+            x1, y1 = _map_xy(row["x_end"], row["y_end"])
+            xs.extend([x0, x1, None])
+            ys.extend([y0, y1, None])
+        fig.add_scatter(
+            x=xs,
+            y=ys,
+            mode="lines",
+            line=dict(color=line_color, width=line_width),
+            opacity=opacity,
+            hoverinfo="skip",
+            showlegend=False,
+        )
+        fig.add_scatter(
+            x=[_map_xy(x, y)[0] for x, y in zip(df["x_end"], df["y_end"])],
+            y=[_map_xy(x, y)[1] for x, y in zip(df["x_end"], df["y_end"])],
+            mode="markers",
+            marker=dict(size=max(3, int(marker_size * 0.7)), color=marker_color),
+            opacity=opacity,
+            hoverinfo="skip",
+            showlegend=False,
+        )
+        return
+
+    fig.add_scatter(
+        x=[_map_xy(x, y)[0] for x, y in zip(df["x"], df["y"])],
+        y=[_map_xy(x, y)[1] for x, y in zip(df["x"], df["y"])],
+        mode="markers",
+        marker=dict(size=marker_size, color=marker_color, line=dict(color="black", width=0.5), opacity=opacity),
+        hoverinfo="skip",
+        showlegend=False,
+    )
+
 def _build_full_pitch_line_traces(orientation="vertical"):
     traces = []
     line_color = "black"
