@@ -474,11 +474,11 @@ def build_canvas(
             fig.update_yaxes(range=[0.0, X_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
     else:
         if pitch_key == "full":
-            fig.update_xaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[60.0, -60.0], autorange=False, visible=False, fixedrange=True)
         elif pitch_key == "own half":
-            fig.update_xaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[5.0, X_MIN], autorange=False, visible=False, fixedrange=True)
         else:  # opp half
-            fig.update_xaxes(range=[0.0, X_MAX], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[X_MAX, 0.0], autorange=False, visible=False, fixedrange=True)
         fig.update_yaxes(range=[Y_MAX, Y_MIN], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
 
     return fig

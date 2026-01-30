@@ -35,7 +35,7 @@ def fetch_events_impect(
             CAST(gameTimeInSec AS FLOAT64) AS gameTimeInSec
             {metrics_sql}
         FROM {events_table}
-        WHERE matchId IN UNNEST(@matchIds)
+        WHERE CAST(matchId AS INT64) IN UNNEST(@matchIds)
           AND startAdjCoordinatesX IS NOT NULL
           AND startAdjCoordinatesY IS NOT NULL
           {squad_clause}
