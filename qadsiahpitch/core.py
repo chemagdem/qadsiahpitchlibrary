@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, List
 
 from google.cloud import bigquery
@@ -56,6 +57,32 @@ def parse_list(raw):
             pass
         return [x.strip() for x in s.split(",") if x.strip()]
     return [raw]
+
+
+def parse_metric_filters(raw_metric):
+    """
+    Parse metric entries. Normal metrics are treated as column names.
+    Special syntax: "FROM <column> import <value1, value2>" adds filters.
+    Returns (metrics, filters_dict).
+    """
+    metrics = []
+    filters = {}
+    items = parse_list(raw_metric)
+    for item in items:
+        if not isinstance(item, str):
+            metrics.append(item)
+            continue
+        text = item.strip()
+        m = re.match(r"^FROM\s+([A-Za-z_][A-Za-z0-9_]*)\s+import\s+(.+)$", text, flags=re.IGNORECASE)
+        if not m:
+            metrics.append(text)
+            continue
+        col = m.group(1)
+        raw_vals = m.group(2).strip()
+        vals = [v.strip() for v in raw_vals.split(",") if v.strip()]
+        if vals:
+            filters.setdefault(col, []).extend(vals)
+    return metrics, filters
 
 
 def resolve_match_ids(

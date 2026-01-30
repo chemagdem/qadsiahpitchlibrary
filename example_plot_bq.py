@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from google.cloud import bigquery
 
-from qadsiahpitch.core import parse_list, resolve_match_ids, resolve_analysis_team_ids
+from qadsiahpitch.core import parse_list, parse_metric_filters, resolve_match_ids, resolve_analysis_team_ids
 from qadsiahpitch.plot import build_canvas
 from qadsiahpitch.providers.impect import fetch_events_impect
 
@@ -59,7 +59,13 @@ def plot_from_bq(body: Dict) -> Any:
     squad_id = body.get("squadId")
     opponent_id = body.get("opponentId")
     team_id = opponent_id if opponent_id is not None else squad_id
-    metrics = parse_list(body.get("metric"))
+    metrics, filters = parse_metric_filters(body.get("metric"))
+    event_types = parse_list(body.get("eventType"))
+    events = parse_list(body.get("event"))
+    if event_types:
+        filters.setdefault("eventType", []).extend(event_types)
+    if events:
+        filters.setdefault("event", []).extend(events)
 
     client = bigquery.Client(project=PROJECT_ID)
     match_ids = resolve_match_ids(client, body, team_id, T_MATCHDATA)
@@ -84,6 +90,7 @@ def plot_from_bq(body: Dict) -> Any:
         match_ids=match_ids,
         squad_ids=analysis_team_ids,
         metrics=metrics,
+        filters=filters,
     )
     if match_ids:
         df = df[df["match_id"].isin([int(m) for m in match_ids])]
