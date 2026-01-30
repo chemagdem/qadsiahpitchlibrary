@@ -9,7 +9,7 @@ It includes:
 - BigQuery helpers (match/team resolution and event fetch).
 - Event markers as points or arrows (start → end).
 
-The library **does not impose business logic**. It only gives you a fast, consistent base to draw from.
+
 
 ---
 
