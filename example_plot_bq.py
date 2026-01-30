@@ -6,7 +6,7 @@ import pandas as pd
 from google.cloud import bigquery
 
 from qadsiahpitch.core import parse_list, parse_metric_filters, resolve_match_ids, resolve_analysis_team_ids
-from qadsiahpitch.plot import build_canvas
+from qadsiahpitch.plot import build_canvas, add_grid_heatmap
 from qadsiahpitch.providers.impect import fetch_events_impect
 
 PROJECT_ID = "prj-alqadsiahplatforms-0425"
@@ -125,6 +125,17 @@ def plot_from_bq(body: Dict) -> Any:
     if df.empty:
         return fig
 
+    grid_debug = add_grid_heatmap(
+        fig=fig,
+        x_vals=df["x"].values,
+        y_vals=df["y"].values,
+        pitch=pitch,
+        grid=grid,
+        orientation=orientation,
+        against=against,
+    )
+    print(f"[DEBUG] grid heatmap: {grid_debug}")
+
     base_count = len(fig.data)
     players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
     for player in players:
@@ -181,15 +192,15 @@ def plot_from_bq(body: Dict) -> Any:
 if __name__ == "__main__":
     test_body = {
         "provider": "impect",
-        "pitch": "full",
-        "orientation": "horizontal",
-        "grid": "5x3",
+        "pitch": "opp half",
+        "orientation": "vertical",
+        "grid": "5x5",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
         "squadId": 5067,
         "matchIds": 228025,
         "against": 0,
-        "metric": ["SHOT_XG"],
+        "metric": ["FROM actionType import SHOT"],
     }
 
     print(f"[DEBUG] test_body pitch={test_body.get('pitch')} grid={test_body.get('grid')}")

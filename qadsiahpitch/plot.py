@@ -139,7 +139,7 @@ def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_ed
         ))
 
 
-def _draw_set_piece_grid(fig, orientation):
+def _set_piece_zones():
     zones_right = [
         (27.0, 52.5, -34.00, -20.16),
         (36.0, 52.5, -20.16, -9.16),
@@ -154,21 +154,12 @@ def _draw_set_piece_grid(fig, orientation):
         (47.0, 52.5, 3.05, 9.16),
         (27.0, 36.0, -20.16, 20.16),
     ]
-    zones_left = [
-        (27.0, 52.5, -34.00, -20.16),
-        (36.0, 52.5, -20.16, -9.16),
-        (36.0, 41.5, -9.16, 9.16),
-        (36.0, 52.5, 9.16, 20.16),
-        (27.0, 52.5, 20.16, 34.00),
-        (41.5, 47.0, -9.16, -3.05),
-        (47.0, 52.5, -9.16, -3.05),
-        (41.5, 47.0, -3.05, 3.05),
-        (47.0, 52.5, -3.05, 3.05),
-        (41.5, 47.0, 3.05, 9.16),
-        (47.0, 52.5, 3.05, 9.16),
-        (27.0, 36.0, -20.16, 20.16),
-    ]
-    zones = list({z for z in (zones_right + zones_left)})
+    zones = list({z for z in zones_right})
+    return zones
+
+
+def _draw_set_piece_grid(fig, orientation):
+    zones = _set_piece_zones()
     line_color = "rgba(120,120,120,0.8)"
     for x0, x1, y0, y1 in zones:
         if orientation == "vertical":
@@ -184,6 +175,155 @@ def _draw_set_piece_grid(fig, orientation):
             showlegend=False,
         ))
 
+
+def _grid_edges_for_option(grid: str, pitch_key: str):
+    grid_key = str(grid).lower().strip()
+    if grid_key in ("none", "null", ""):
+        return None, None
+    if grid_key == "set piece":
+        return None, None
+    x_min, x_max = _pitch_x_range(pitch_key)
+    x_bins, y_bins = _grid_bins(grid_key)
+    if x_bins > 0 and y_bins > 0:
+        x_edges = np.linspace(x_min, x_max, x_bins + 1)
+        y_edges = np.linspace(Y_MIN, Y_MAX, y_bins + 1)
+        return x_edges, y_edges
+    if grid_key in ("own third", "own_third", "own-third",
+                    "middle third", "middle_third", "middle-third",
+                    "final third", "final_third", "final-third"):
+        third = (X_MAX - X_MIN) / 3.0
+        if grid_key.startswith("own"):
+            start, end = X_MIN, X_MIN + third
+        elif grid_key.startswith("middle"):
+            start, end = X_MIN + third, X_MIN + 2 * third
+        else:
+            start, end = X_MIN + 2 * third, X_MAX
+        start = max(start, x_min)
+        end = min(end, x_max)
+        if end <= start:
+            return None, None
+        lane = (Y_MAX - Y_MIN) / 3.0
+        x_edges = np.array([start, end])
+        y_edges = np.array([Y_MIN, Y_MIN + lane, Y_MIN + 2 * lane, Y_MAX])
+        return x_edges, y_edges
+    return None, None
+
+
+def add_grid_heatmap(
+    fig: go.Figure,
+    x_vals: np.ndarray,
+    y_vals: np.ndarray,
+    pitch: str,
+    grid: str,
+    orientation: str,
+    against: int = 0,
+    opacity: float = 0.7,
+):
+    pitch_key = _normalize_pitch(pitch)
+    grid_key = str(grid).lower().strip() if grid is not None else ""
+    if grid_key == "set piece":
+        zones = _set_piece_zones()
+        if not zones:
+            return {"vmax": 0, "nonzero": 0}
+        counts = np.zeros(len(zones))
+        for x, y in zip(x_vals, y_vals):
+            if x is None or y is None:
+                continue
+            for idx, (x0, x1, y0, y1) in enumerate(zones):
+                if x0 <= x <= x1 and y0 <= y <= y1:
+                    counts[idx] += 1
+                    break
+        vmax = counts.max() if counts.max() > 0 else 1
+        if against == 0:
+            colorscale = [[0.0, "#ffffff"], [1.0, "#AA2D3A"]]
+        else:
+            colorscale = [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+        min_value = vmax * 0.25
+        for idx, (x0, x1, y0, y1) in enumerate(zones):
+            if counts[idx] <= 0:
+                continue
+            if orientation == "vertical":
+                xs = [y0, y1, y1, y0, y0]
+                ys = [x0, x0, x1, x1, x0]
+            else:
+                xs = [x0, x1, x1, x0, x0]
+                ys = [y0, y0, y1, y1, y0]
+            color = _interp_color(colorscale, max(counts[idx], min_value), vmax)
+            fig.add_trace(go.Scatter(
+                x=xs,
+                y=ys,
+                fill="toself",
+                mode="lines",
+                line=dict(width=0),
+                fillcolor=color,
+                opacity=opacity,
+                hoverinfo="skip",
+                showlegend=False,
+            ))
+        _draw_set_piece_grid(fig, orientation)
+        return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
+
+    x_edges, y_edges = _grid_edges_for_option(grid, pitch_key)
+    if x_edges is None or y_edges is None:
+        return {"vmax": 0, "nonzero": 0}
+
+    counts = np.zeros((len(x_edges) - 1, len(y_edges) - 1))
+    for x, y in zip(x_vals, y_vals):
+        if x is None or y is None:
+            continue
+        if x < x_edges[0] or x > x_edges[-1]:
+            continue
+        if y < y_edges[0] or y > y_edges[-1]:
+            continue
+        xi = np.digitize(x, x_edges) - 1
+        yi = np.digitize(y, y_edges) - 1
+        if 0 <= xi < counts.shape[0] and 0 <= yi < counts.shape[1]:
+            counts[xi, yi] += 1
+
+    vmax = counts.max() if counts.max() > 0 else 1
+    if against == 0:
+        colorscale = [[0.0, "#ffffff"], [1.0, "#AA2D3A"]]
+    else:
+        colorscale = [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+
+    min_value = vmax * 0.25
+    for i in range(len(x_edges) - 1):
+        for j in range(len(y_edges) - 1):
+            count = counts[i, j]
+            if count <= 0:
+                continue
+            x0, x1 = x_edges[i], x_edges[i + 1]
+            y0, y1 = y_edges[j], y_edges[j + 1]
+            if orientation == "vertical":
+                xs = [y0, y1, y1, y0, y0]
+                ys = [x0, x0, x1, x1, x0]
+            else:
+                xs = [x0, x1, x1, x0, x0]
+                ys = [y0, y0, y1, y1, y0]
+            color = _interp_color(colorscale, max(count, min_value), vmax)
+            fig.add_trace(go.Scatter(
+                x=xs,
+                y=ys,
+                fill="toself",
+                mode="lines",
+                line=dict(width=0),
+                fillcolor=color,
+                opacity=opacity,
+                hoverinfo="skip",
+                showlegend=False,
+            ))
+
+    _draw_grid_lines(
+        fig,
+        x_edges[0],
+        x_edges[-1],
+        Y_MIN,
+        Y_MAX,
+        orientation,
+        x_edges,
+        y_edges,
+    )
+    return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
 
 def _build_full_pitch_line_traces(orientation="vertical"):
     traces = []
