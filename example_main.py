@@ -44,6 +44,7 @@ def example_canvas(request: Request):
         output = (body.get("output") or "plotly").lower()
 
         fig = build_canvas(
+            provider=body.get("provider", "impect"),
             pitch=pitch,
             grid=grid,
             orientation=orientation,
@@ -74,10 +75,11 @@ if __name__ == "__main__":
 
     test_body = {
         "provider": "impect",
-        "pitch": "opp half",
-        "orientation": "vertical",
+        "pitch": "own half",
+        "orientation": "horizontal",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
+        "grid": "own third",
         "output": "html",
     }
 
@@ -90,9 +92,10 @@ if __name__ == "__main__":
                 payload = json.loads(resp.data)
                 html = payload.get("data")
                 if html:
-                    with open("canvas_test.html", "w", encoding="utf-8") as f:
+                    out_path = os.path.join(os.path.dirname(__file__), "canvas_test.html")
+                    with open(out_path, "w", encoding="utf-8") as f:
                         f.write(html)
-                    print("Saved: canvas_test.html")
+                    print(f"Saved: {out_path}")
         except Exception as save_err:
             print(f"⚠️ Could not save HTML: {save_err}")
         try:

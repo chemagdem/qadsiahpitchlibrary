@@ -22,7 +22,11 @@ Filters:
 - `filtertype`: `"dropdown"` or `"slider"`  
   Can be a list, e.g. `["dropdown", "dropdown"]`.
 - `filtercontent`: field(s) used in filter UI, e.g. `"playerName"`  
+<<<<<<< HEAD
   or `["playerName", "playerId"]`.  These values should match BigQuery column names.
+=======
+  or `["playerName", "playerId"]`. These values should match BigQuery column names.
+>>>>>>> cf11727 (Update grids and canvas options)
 
 Notes:
 - This library only builds the pitch + grid + filter UI (canvas).  
