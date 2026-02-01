@@ -73,7 +73,6 @@ Examples:
 ### UI filters
 
 - `filtertype`: `"dropdown"` or `"slider"`
-  - Can also be a list: `["dropdown", "dropdown"]`
 - `filtercontent`: BigQuery column(s) used by the filter UI
   - Example: `"playerName"` or `["playerName", "playerId"]`
 
