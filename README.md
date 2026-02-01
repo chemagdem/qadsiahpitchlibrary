@@ -80,8 +80,8 @@ Examples:
 
 - `markertype`: `"point"` or `"arrow"`
   - `"point"`: dot at event location
-  - `"arrow"`: line `x/y â†’ x_end/y_end` + end dot
-- `markeralpha`: float (0â€“1) controlling marker opacity
+  - `"arrow"`: line `x/y or x_end/y_end` + end dot
+- `markeralpha`: float (0/1) controlling marker opacity
 
 ### Team selection
 
