@@ -50,8 +50,6 @@ Defines coordinate system and default columns.
   - `"none"` / `null`
   - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
   - `"set piece"`
-  - `"wings"`
-  - `"wings"` (lane + third grid with box lines)
   - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
 Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
