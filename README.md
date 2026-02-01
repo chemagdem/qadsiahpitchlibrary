@@ -61,7 +61,7 @@ Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
 Options:
 - `"whitetoteal"` (default)
 - `"whitetored"`
-- Custom list of 2â€“5 colors (hex or rgb strings)
+- Custom list of 2 to 5 colors (hex or rgb strings)
 
 Examples:
 ```json
