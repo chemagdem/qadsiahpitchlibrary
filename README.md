@@ -3,10 +3,6 @@
 A lightweight Python library for building football pitch maps in Plotly.
 It focuses on the **canvas** (pitch + lines + grid + UI), while you add your own data traces.
 
-Demo:
-
-![Demo](assets/demo.png)
-
 What it includes:
 - Pitch canvas (full / own half / opp half, horizontal / vertical).
 - Configurable grids and frequency heatmaps.
