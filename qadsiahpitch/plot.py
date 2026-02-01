@@ -218,6 +218,7 @@ def add_grid_heatmap(
     orientation: str,
     against: int = 0,
     opacity: float = 0.7,
+    draw_grid_lines: bool = True,
 ):
     pitch_key = _normalize_pitch(pitch)
     grid_key = str(grid).lower().strip() if grid is not None else ""
@@ -260,7 +261,8 @@ def add_grid_heatmap(
                 hoverinfo="skip",
                 showlegend=False,
             ))
-        _draw_set_piece_grid(fig, orientation)
+        if draw_grid_lines:
+            _draw_set_piece_grid(fig, orientation)
         return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
 
     x_edges, y_edges = _grid_edges_for_option(grid, pitch_key)
@@ -313,16 +315,17 @@ def add_grid_heatmap(
                 showlegend=False,
             ))
 
-    _draw_grid_lines(
-        fig,
-        x_edges[0],
-        x_edges[-1],
-        Y_MIN,
-        Y_MAX,
-        orientation,
-        x_edges,
-        y_edges,
-    )
+    if draw_grid_lines:
+        _draw_grid_lines(
+            fig,
+            x_edges[0],
+            x_edges[-1],
+            Y_MIN,
+            Y_MAX,
+            orientation,
+            x_edges,
+            y_edges,
+        )
     return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
 
 

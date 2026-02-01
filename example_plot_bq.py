@@ -88,7 +88,7 @@ def plot_from_bq(body: Dict) -> Any:
     )
 
     if provider != "impect":
-        raise ValueError("Este ejemplo solo implementa provider=impect.")
+        raise ValueError("This only works if provider=impect.")
 
     coord_columns = resolve_coord_columns(provider)
     df = fetch_events_impect(
@@ -121,18 +121,26 @@ def plot_from_bq(body: Dict) -> Any:
             if analysis_team_ids and not set(analysis_team_ids).intersection(set(squads)):
                 print("[DEBUG] The provided squadId/opponentId is not in those matches.")
 
+    filtercontent = parse_list(body.get("filtercontent"))
+    filtertype_list = parse_list(body.get("filtertype"))
     fig = build_canvas(
         provider=provider,
         pitch=pitch,
         grid=grid,
         orientation=orientation,
-        filtercontent=parse_list(body.get("filtercontent")),
-        filtertype=parse_list(body.get("filtertype")),
+        filtercontent=filtercontent,
+        filtertype=filtertype_list,
     )
 
     if df.empty:
         return fig
 
+    base_count = len(fig.data)
+    players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
+
+    all_heatmap_indices = []
+    heatmap_traces_by_player = {}
+    before = len(fig.data)
     grid_debug = add_grid_heatmap(
         fig=fig,
         x_vals=df["x"].values,
@@ -141,13 +149,30 @@ def plot_from_bq(body: Dict) -> Any:
         grid=grid,
         orientation=orientation,
         against=against,
+        draw_grid_lines=False,
     )
+    all_heatmap_indices = list(range(before, len(fig.data)))
     print(f"[DEBUG] grid heatmap: {grid_debug}")
 
+    is_dropdown = (filtertype_list or ["dropdown"])[0] == "dropdown"
+    if is_dropdown and players:
+        for player in players:
+            df_player = df[df["playerName"] == player]
+            before = len(fig.data)
+            add_grid_heatmap(
+                fig=fig,
+                x_vals=df_player["x"].values,
+                y_vals=df_player["y"].values,
+                pitch=pitch,
+                grid=grid,
+                orientation=orientation,
+                against=against,
+                draw_grid_lines=False,
+            )
+            heatmap_traces_by_player[player] = list(range(before, len(fig.data)))
+
     markertype = body.get("markertype", "point")
-    base_count = len(fig.data)
-    players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
-    trace_by_player = []
+    marker_traces_by_player = {}
     for player in players:
         df_player = df[df["playerName"] == player]
         before = len(fig.data)
@@ -157,20 +182,34 @@ def plot_from_bq(body: Dict) -> Any:
             orientation=orientation,
             markertype=markertype,
         )
-        added = len(fig.data) - before
-        trace_by_player.extend([player] * added)
+        marker_traces_by_player[player] = list(range(before, len(fig.data)))
 
-    if (body.get("filtertype") or "dropdown") == "dropdown" and players:
+    if is_dropdown and players:
         buttons = []
         total_traces = len(fig.data)
 
-        def _vis_for_player(name: str):
-            vis = [True] * base_count
-            for idx in range(base_count, total_traces):
-                vis.append(trace_by_player[idx - base_count] == name)
+        def _vis_all():
+            vis = [True] * total_traces
+            for idxs in heatmap_traces_by_player.values():
+                for idx in idxs:
+                    vis[idx] = False
+            for idx in all_heatmap_indices:
+                vis[idx] = True
             return vis
 
-        buttons.append(dict(label="All", method="update", args=[{"visible": [True] * total_traces}]))
+        def _vis_for_player(name: str):
+            vis = [True] * base_count + [False] * (total_traces - base_count)
+            for idx in heatmap_traces_by_player.get(name, []):
+                vis[idx] = True
+            for idx in marker_traces_by_player.get(name, []):
+                vis[idx] = True
+            return vis
+
+        initial_vis = _vis_all()
+        for idx, visible in enumerate(initial_vis):
+            fig.data[idx].visible = visible
+
+        buttons.append(dict(label="All", method="update", args=[{"visible": initial_vis}]))
         for player in players:
             buttons.append(dict(label=player, method="update", args=[{"visible": _vis_for_player(player)}]))
 
@@ -193,14 +232,14 @@ def plot_from_bq(body: Dict) -> Any:
 if __name__ == "__main__":
     test_body = {
         "provider": "impect",
-        "pitch": "full",
+        "pitch": "own half",
         "orientation": "vertical",
-        "grid": "5x5",
+        "grid": "5x3",
         "filtertype": "dropdown",
         "filtercontent": "playerName",
         "squadId": 5067,
         "matchIds": 228025,
-        "against": 0,
+        "against": 1,
         "metric": ["FROM actionType import PASS"],
         "markertype": "arrow",
     }
