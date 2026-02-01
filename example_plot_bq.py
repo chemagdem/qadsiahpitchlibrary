@@ -12,7 +12,16 @@ from qadsiahpitch.core import (
     resolve_analysis_team_ids,
     resolve_coord_columns,
 )
-from qadsiahpitch.plot import build_canvas, add_grid_heatmap, add_event_markers
+from qadsiahpitch.plot import (
+    build_canvas,
+    add_grid_heatmap,
+    add_event_markers,
+    _pitch_x_range,
+    _normalize_pitch,
+    _reorder_heatmap_traces,
+    Y_MIN,
+    Y_MAX,
+)
 from qadsiahpitch.providers.impect import fetch_events_impect
 
 PROJECT_ID = "prj-alqadsiahplatforms-0425"
@@ -105,6 +114,15 @@ def plot_from_bq(body: Dict) -> Any:
     print(f"[DEBUG] match_ids: {match_ids}")
     print(f"[DEBUG] unique matches in df: {df['match_id'].nunique() if not df.empty else 0}")
 
+    pitch_key = _normalize_pitch(pitch)
+    x_min, x_max = _pitch_x_range(pitch_key)
+    df = df[
+        (df["x"].astype(float) >= float(x_min))
+        & (df["x"].astype(float) <= float(x_max))
+        & (df["y"].astype(float) >= float(Y_MIN))
+        & (df["y"].astype(float) <= float(Y_MAX))
+    ]
+
     if df.empty and match_ids:
         df_probe = fetch_events_impect(
             client=client,
@@ -135,12 +153,10 @@ def plot_from_bq(body: Dict) -> Any:
     if df.empty:
         return fig
 
-    base_count = len(fig.data)
     players = sorted(df.get("playerName", pd.Series(dtype=str)).dropna().unique().tolist())
+    is_dropdown = (filtertype_list or ["dropdown"])[0] == "dropdown"
 
-    all_heatmap_indices = []
-    heatmap_traces_by_player = {}
-    before = len(fig.data)
+    gridcolor = body.get("gridcolor")
     grid_debug = add_grid_heatmap(
         fig=fig,
         x_vals=df["x"].values,
@@ -148,17 +164,17 @@ def plot_from_bq(body: Dict) -> Any:
         pitch=pitch,
         grid=grid,
         orientation=orientation,
-        against=against,
+        gridcolor=gridcolor,
         draw_grid_lines=False,
+        show_colorbar=True,
+        group_key="all",
+        reorder_below_lines=False,
     )
-    all_heatmap_indices = list(range(before, len(fig.data)))
     print(f"[DEBUG] grid heatmap: {grid_debug}")
 
-    is_dropdown = (filtertype_list or ["dropdown"])[0] == "dropdown"
     if is_dropdown and players:
         for player in players:
             df_player = df[df["playerName"] == player]
-            before = len(fig.data)
             add_grid_heatmap(
                 fig=fig,
                 x_vals=df_player["x"].values,
@@ -166,12 +182,35 @@ def plot_from_bq(body: Dict) -> Any:
                 pitch=pitch,
                 grid=grid,
                 orientation=orientation,
-                against=against,
+                gridcolor=gridcolor,
                 draw_grid_lines=False,
+                show_colorbar=False,
+                group_key=player,
+                reorder_below_lines=False,
             )
-            heatmap_traces_by_player[player] = list(range(before, len(fig.data)))
+
+    _reorder_heatmap_traces(fig)
+
+    base_trace_indices = []
+    all_heatmap_indices = []
+    colorbar_indices = []
+    heatmap_traces_by_player = {}
+    for idx, tr in enumerate(fig.data):
+        name = getattr(tr, "name", "") or ""
+        if name == "heatmap-scale":
+            colorbar_indices.append(idx)
+            continue
+        if name.startswith("heatmap-cell:"):
+            key = name.split(":", 1)[1]
+            if key == "all":
+                all_heatmap_indices.append(idx)
+            else:
+                heatmap_traces_by_player.setdefault(key, []).append(idx)
+            continue
+        base_trace_indices.append(idx)
 
     markertype = body.get("markertype", "point")
+    markeralpha = body.get("markeralpha")
     marker_traces_by_player = {}
     for player in players:
         df_player = df[df["playerName"] == player]
@@ -181,6 +220,7 @@ def plot_from_bq(body: Dict) -> Any:
             df=df_player,
             orientation=orientation,
             markertype=markertype,
+            markeralpha=markeralpha,
         )
         marker_traces_by_player[player] = list(range(before, len(fig.data)))
 
@@ -189,19 +229,27 @@ def plot_from_bq(body: Dict) -> Any:
         total_traces = len(fig.data)
 
         def _vis_all():
-            vis = [True] * total_traces
-            for idxs in heatmap_traces_by_player.values():
-                for idx in idxs:
-                    vis[idx] = False
+            vis = [False] * total_traces
+            for idx in base_trace_indices:
+                vis[idx] = True
             for idx in all_heatmap_indices:
+                vis[idx] = True
+            for idxs in marker_traces_by_player.values():
+                for idx in idxs:
+                    vis[idx] = True
+            for idx in colorbar_indices:
                 vis[idx] = True
             return vis
 
         def _vis_for_player(name: str):
-            vis = [True] * base_count + [False] * (total_traces - base_count)
+            vis = [False] * total_traces
+            for idx in base_trace_indices:
+                vis[idx] = True
             for idx in heatmap_traces_by_player.get(name, []):
                 vis[idx] = True
             for idx in marker_traces_by_player.get(name, []):
+                vis[idx] = True
+            for idx in colorbar_indices:
                 vis[idx] = True
             return vis
 
@@ -232,16 +280,18 @@ def plot_from_bq(body: Dict) -> Any:
 if __name__ == "__main__":
     test_body = {
         "provider": "impect",
-        "pitch": "own half",
-        "orientation": "vertical",
-        "grid": "5x3",
+        "pitch": "full",
+        "orientation": "horizontal",
+        "grid": "5x3", #choose between "5x3", "20x20", "set piece", "own third", "final third", "5x5"
         "filtertype": "dropdown",
         "filtercontent": "playerName",
         "squadId": 5067,
         "matchIds": 228025,
-        "against": 1,
-        "metric": ["FROM actionType import PASS"],
-        "markertype": "arrow",
+        "against": 0, #used to determine the team plotted. (=0 is the same as squadId, =1 is the opponent)
+        "metric": ["FROM actionType import PASS", "FROM result import SUCCESS"],
+        "markertype": "arrow", #choose between "point", "arrow"
+        "markeralpha": 0.5, #marker opacity
+        "gridcolor": "whitetored" #choose between "whitetoteal", "blacktoteal" or put between 2-5 rgb/hex colors (e.g. "gridcolor": ["rgb(255,255,255)", "rgb(255,140,0)", "rgb(70,130,180)", "rgb(138,43,226)"]')
     }
 
     print(f"[DEBUG] test_body pitch={test_body.get('pitch')} grid={test_body.get('grid')}")

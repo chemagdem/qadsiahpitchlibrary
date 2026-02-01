@@ -1,15 +1,14 @@
-# qadsiahpitch
+﻿# qadsiahpitch
 
-Lightweight library for building Plotly football pitch maps in an agnostic way.  
-It includes:
+A lightweight Python library for building football pitch maps in Plotly.
+It focuses on the **canvas** (pitch + lines + grid + UI), while you add your own data traces.
 
-- Pitch canvas (full/own half/opp half, horizontal/vertical).
-- Configurable grid and frequency heatmap.
-- UI filters (dropdown/slider).
-- BigQuery helpers (match/team resolution and event fetch).
-- Event markers as points or arrows (start → end).
-
-
+What it includes:
+- Pitch canvas (full / own half / opp half, horizontal / vertical).
+- Configurable grids and frequency heatmaps.
+- UI filters (dropdown / slider).
+- Event markers as points or arrows (start â†’ end).
+- BigQuery helpers for Impect/SkillCorner/StatsBomb pipelines.
 
 ---
 
@@ -21,10 +20,20 @@ pip install git+https://github.com/chemagdem/qadsiahpitchlibrary.git
 
 ---
 
+## Core concepts
+
+- **Canvas only**: `build_canvas(...)` draws the field, lines, grids and UI.
+- **You add data**: use `add_grid_heatmap(...)` and `add_event_markers(...)` with your own data.
+- **Provider aware**: `provider` controls coordinate defaults.
+- **Orientation aware**: vertical/horizontal switch with consistent geometry.
+- **Half views**: `own half` and `opp half` crop the field correctly.
+
+---
+
 ## Main payload parameters
 
 ### Provider
-Defines the coordinate system and default columns.
+Defines coordinate system and default columns.
 
 - `provider`: `"impect"`, `"skillcorner"`, `"statsbomb"`
   - Impect / SkillCorner: X [-52.5, 52.5], Y [-34, 34]
@@ -37,49 +46,74 @@ Defines the coordinate system and default columns.
 
 ### Grid
 
-- `grid`:  
+- `grid` options:
   - `"none"` / `null`
   - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
   - `"set piece"`
-  - `"own third"`, `"middle third"`, `"final third"`  
-    (each third is split into **3 lanes**)
+  - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
-> Grid lines are always gray with 80% opacity (`rgba(120,120,120,0.8)`).
+Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
 
-### UI Filters
+### Heatmap color
 
-- `filtertype`: `"dropdown"` or `"slider"`  
-  Also accepts a list, e.g. `["dropdown", "dropdown"]`.
-- `filtercontent`: BigQuery column(s) used by the filter UI  
-  Example: `"playerName"` or `["playerName", "playerId"]`.
+- `gridcolor` controls the heatmap colors. It does **not** depend on `against`.
+
+Options:
+- `"whitetoteal"` (default)
+- `"whitetored"`
+- Custom list of 2â€“5 colors (hex or rgb strings)
+
+Examples:
+```json
+"gridcolor": "whitetoteal"
+"gridcolor": ["#ffffff", "#fdae61", "#2c7bb6"]
+"gridcolor": ["rgb(255,255,255)", "rgb(255,140,0)", "rgb(70,130,180)", "rgb(138,43,226)"]
+```
+
+### UI filters
+
+- `filtertype`: `"dropdown"` or `"slider"`
+  - Can also be a list: `["dropdown", "dropdown"]`
+- `filtercontent`: BigQuery column(s) used by the filter UI
+  - Example: `"playerName"` or `["playerName", "playerId"]`
 
 ### Marker type
 
 - `markertype`: `"point"` or `"arrow"`
-  - `"point"`: draw a dot at the event location.
-  - `"arrow"`: draw a line start → end + end dot.
+  - `"point"`: dot at event location
+  - `"arrow"`: line `x/y â†’ x_end/y_end` + end dot
+- `markeralpha`: float (0â€“1) controlling marker opacity
+
+### Team selection
+
+- `against`: used **only** to determine which team to analyze
+  - `0` = same as `squadId`
+  - `1` = opponent team
+
+---
+
+## Attack direction arrow
+
+The canvas always draws an attack direction arrow:
+- **Vertical** pitch: arrow points **up** on the right side.
+- **Horizontal** pitch: arrow points **left**, below the field.
 
 ---
 
 ## Core API
 
 ### `build_canvas(provider, pitch, grid, orientation, filtercontent, filtertype)`
-Builds the pitch, axes, lines, and grid lines only.  
+Builds the pitch, axes, lines, and grid lines only.
 Returns a `plotly.graph_objects.Figure`.
 
-### `add_grid_heatmap(fig, x_vals, y_vals, pitch, grid, orientation, against=0, opacity=0.7)`
-Paints the grid by event frequency:
+### `add_grid_heatmap(fig, x_vals, y_vals, pitch, grid, orientation, gridcolor=None, opacity=0.7)`
+Paints the grid by event frequency (heatmap cells drawn **under** pitch lines).
+Returns: `{"vmax": ..., "nonzero": ...}`.
 
-- `against=0` → white → red scale (`#AA2D3A`)
-- `against=1` → white → teal scale
-
-Returns a small debug dict: `{"vmax": ..., "nonzero": ...}`.
-
-### `add_event_markers(fig, df, orientation, markertype="point", ...)`
+### `add_event_markers(fig, df, orientation, markertype="point", markeralpha=None, ...)`
 Draws events:
-
 - `point`: dot at `x/y`.
-- `arrow`: line `x/y → x_end/y_end` + end dot.
+- `arrow`: line `x/y â†’ x_end/y_end` + end dot.
 
 Requires `x`, `y` and optionally `x_end`, `y_end`.
 
@@ -87,45 +121,32 @@ Requires `x`, `y` and optionally `x_end`, `y_end`.
 
 ## BigQuery helpers
 
-### `parse_match_ids(raw)`
-Parses `matchIds` from list, string or number.
-
-### `parse_matchweeks(raw)`
-Parses `matchweeks` from list, string or number.
-
 ### `parse_list(raw)`
 Converts anything into a list:
-`"a,b" → ["a","b"]`, `["a"] → ["a"]`, `None → []`.
+- `"a,b" â†’ ["a","b"]`, `["a"] â†’ ["a"]`, `None â†’ []`
 
 ### `parse_metric_filters(raw_metric)`
 Supports the syntax:
-
 ```
 FROM <column> import <value1, value2>
 ```
-
 Example:
-`["SHOT_XG", "FROM actionType import SHOT"]`  
-→ Metric `SHOT_XG` + filter `actionType=SHOT`.
-
+```
+["SHOT_XG", "FROM actionType import SHOT", "FROM result import SUCCESS"]
+```
 Returns `(metrics, filters)`.
 
 ### `resolve_match_ids(client, request_json, team_id, match_data_table, default_iteration_id=1469)`
 Resolves match IDs:
-
-- If `matchIds`/`matchId` is present, uses them.
-- If `matchweeks` is present, queries `matchData` with `iterationId`.
-- If no `matchweeks`, returns all matches for the team.
+- Uses `matchIds`/`matchId` if provided.
+- Uses `matchweeks` with `iterationId` when present.
+- Otherwise returns all matches for the team.
 
 ### `resolve_analysis_team_ids(client, match_ids, squad_id, opponent_id, against, match_info_table)`
-Resolves which team to analyze:
-
-- If `opponent_id` is provided, it is used.
-- If `against=1`, it returns opponents from `matchInfo`.
+Determines which team to analyze.
 
 ### `resolve_coord_columns(provider)`
-Defines start/end columns by provider:
-
+Maps start/end coordinate columns by provider:
 - Impect: `startAdjCoordinatesX/Y`, `endAdjCoordinatesX/Y`
 - SkillCorner: `x_start/y_start`, `x_end/y_end`
 - StatsBomb: `x/y`, `end_x/end_y`
@@ -136,37 +157,54 @@ Defines start/end columns by provider:
 
 ### `fetch_events_impect(client, events_table, match_ids, squad_ids, metrics, filters=None, coord_columns=None)`
 Queries BigQuery from `Impect.events`:
-
 - Returns `x`, `y`, `x_end`, `y_end`, `playerName`, `playerId`, `gameTimeInSec`.
 - Accepts column filters (`eventType`, `event`, etc.).
 - Accepts numeric `metrics` to bring extra columns.
 
 ---
 
-## Full example
+## Minimal example (canvas only)
+
+```python
+from qadsiahpitch.plot import build_canvas
+
+fig = build_canvas(
+    provider="impect",
+    pitch="full",
+    grid="5x3",
+    orientation="horizontal",
+    filtercontent=["playerName"],
+    filtertype=["dropdown"],
+)
+```
+
+---
+
+## Full example (with heatmap + markers)
 
 ```python
 from qadsiahpitch.plot import build_canvas, add_grid_heatmap, add_event_markers
 
-provider = "impect"
-pitch = "full"
-orientation = "horizontal"
-grid = "5x3"
-against = 1
-markertype = "arrow"
-
 fig = build_canvas(
-    provider=provider,
-    pitch=pitch,
-    grid=grid,
-    orientation=orientation,
+    provider="impect",
+    pitch="full",
+    grid="5x3",
+    orientation="horizontal",
     filtercontent=["playerName"],
     filtertype=["dropdown"],
 )
 
-# df must include x/y and optionally x_end/y_end
-add_grid_heatmap(fig, df["x"].values, df["y"].values, pitch, grid, orientation, against=against)
-add_event_markers(fig, df, orientation=orientation, markertype=markertype)
+add_grid_heatmap(
+    fig,
+    df["x"].values,
+    df["y"].values,
+    pitch="full",
+    grid="5x3",
+    orientation="horizontal",
+    gridcolor=["#ffffff", "#fdae61", "#2c7bb6"],
+)
+
+add_event_markers(fig, df, orientation="horizontal", markertype="arrow", markeralpha=0.6)
 ```
 
 ---
@@ -179,12 +217,14 @@ add_event_markers(fig, df, orientation=orientation, markertype=markertype)
   "pitch": "full",
   "orientation": "vertical",
   "grid": "5x3",
+  "gridcolor": "whitetoteal",
   "filtertype": "dropdown",
   "filtercontent": "playerName",
   "squadId": 5067,
   "matchIds": 228025,
-  "against": 1,
-  "metric": ["FROM actionType import PASS"],
-  "markertype": "arrow"
+  "against": 0,
+  "metric": ["FROM actionType import PASS", "FROM result import SUCCESS"],
+  "markertype": "arrow",
+  "markeralpha": 0.6
 }
 ```

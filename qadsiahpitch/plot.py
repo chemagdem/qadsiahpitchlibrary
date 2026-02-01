@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,11 @@ def _sec_to_match_minute(game_time_sec: float) -> float:
 
 
 def _hex_to_rgb(hex_color):
+    hex_color = str(hex_color).strip()
+    if hex_color.lower().startswith("rgb"):
+        nums = [v.strip() for v in hex_color[hex_color.find("(") + 1:hex_color.find(")")].split(",")]
+        if len(nums) >= 3:
+            return tuple(int(float(v)) for v in nums[:3])
     hex_color = hex_color.lstrip("#")
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
@@ -110,7 +115,7 @@ def _grid_bins(grid: str) -> Tuple[int, int]:
 
 
 def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_edges):
-    line_color = "rgba(120,120,120,0.8)"
+    line_color = "rgba(120,120,120,0.6)"
     def _swap(x, y):
         return (x, y) if orientation == "vertical" else (y, x)
     for y_val in x_edges:
@@ -209,6 +214,36 @@ def _grid_edges_for_option(grid: str, pitch_key: str):
     return None, None
 
 
+def _resolve_grid_colorscale(gridcolor: Optional[object]) -> List[List[object]]:
+    if gridcolor is None or gridcolor == "":
+        key = "whitetoteal"
+    elif isinstance(gridcolor, str):
+        key = gridcolor.strip().lower()
+    else:
+        key = None
+
+    if key == "whitetoteal":
+        return [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+    if key == "whitetored":
+        return [[0.0, "#ffffff"], [1.0, "#AA2D3A"]]
+
+    colors = None
+    if isinstance(gridcolor, (list, tuple)):
+        colors = [str(c) for c in gridcolor if str(c).strip()]
+    elif isinstance(gridcolor, str):
+        parts = [p.strip() for p in gridcolor.replace("(", "").replace(")", "").split(",")]
+        colors = [p for p in parts if p]
+
+    if colors:
+        colors = colors[:5]
+        if len(colors) == 1:
+            colors = ["#ffffff", colors[0]]
+        steps = np.linspace(0.0, 1.0, len(colors)).tolist()
+        return [[float(s), colors[i]] for i, s in enumerate(steps)]
+
+    return [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+
+
 def add_grid_heatmap(
     fig: go.Figure,
     x_vals: np.ndarray,
@@ -216,9 +251,12 @@ def add_grid_heatmap(
     pitch: str,
     grid: str,
     orientation: str,
-    against: int = 0,
+    gridcolor: Optional[object] = None,
     opacity: float = 0.7,
     draw_grid_lines: bool = True,
+    show_colorbar: bool = True,
+    group_key: Optional[str] = None,
+    reorder_below_lines: bool = True,
 ):
     pitch_key = _normalize_pitch(pitch)
     grid_key = str(grid).lower().strip() if grid is not None else ""
@@ -235,10 +273,36 @@ def add_grid_heatmap(
                     counts[idx] += 1
                     break
         vmax = counts.max() if counts.max() > 0 else 1
-        if against == 0:
-            colorscale = [[0.0, "#ffffff"], [1.0, "#AA2D3A"]]
-        else:
-            colorscale = [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+        colorscale = _resolve_grid_colorscale(gridcolor)
+        if show_colorbar:
+            fig.add_scatter(
+                x=[X_MIN, X_MIN],
+                y=[Y_MIN, Y_MIN],
+                mode="markers",
+                marker=dict(
+                    size=0,
+                    color=[0, vmax],
+                    cmin=0,
+                    cmax=vmax,
+                    colorscale=colorscale,
+                    showscale=True,
+                    colorbar=dict(
+                        thickness=16,
+                        len=1.0,
+                        y=0.5,
+                        yanchor="middle",
+                        x=1.02,
+                        tickmode="array",
+                        tickvals=[0, vmax],
+                        ticktext=["Fewer", "Higher"],
+                        tickfont=dict(size=9),
+                    ),
+                ),
+                opacity=0,
+                hoverinfo="skip",
+                showlegend=False,
+                name="heatmap-scale",
+            )
         min_value = vmax * 0.25
         for idx, (x0, x1, y0, y1) in enumerate(zones):
             if counts[idx] <= 0:
@@ -260,9 +324,12 @@ def add_grid_heatmap(
                 opacity=opacity,
                 hoverinfo="skip",
                 showlegend=False,
+                name=f"heatmap-cell:{group_key or 'all'}",
             ))
         if draw_grid_lines:
             _draw_set_piece_grid(fig, orientation)
+        if reorder_below_lines:
+            _reorder_heatmap_traces(fig)
         return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
 
     x_edges, y_edges = _grid_edges_for_option(grid, pitch_key)
@@ -283,11 +350,37 @@ def add_grid_heatmap(
             counts[xi, yi] += 1
 
     vmax = counts.max() if counts.max() > 0 else 1
-    if against == 0:
-        colorscale = [[0.0, "#ffffff"], [1.0, "#AA2D3A"]]
-    else:
-        colorscale = [[0.0, "#ffffff"], [0.5, "#b2d8d8"], [1.0, "#004c4c"]]
+    colorscale = _resolve_grid_colorscale(gridcolor)
 
+    if show_colorbar:
+        fig.add_scatter(
+            x=[x_edges[0], x_edges[0]],
+            y=[y_edges[0], y_edges[0]],
+            mode="markers",
+            marker=dict(
+                size=0,
+                color=[0, vmax],
+                cmin=0,
+                cmax=vmax,
+                colorscale=colorscale,
+                showscale=True,
+                colorbar=dict(
+                        thickness=16,
+                    len=1.0,
+                    y=0.5,
+                    yanchor="middle",
+                    x=1.02,
+                        tickmode="array",
+                        tickvals=[0, vmax],
+                        ticktext=["Fewer", "Higher"],
+                        tickfont=dict(size=9),
+                ),
+            ),
+            opacity=0,
+            hoverinfo="skip",
+            showlegend=False,
+            name="heatmap-scale",
+        )
     min_value = vmax * 0.25
     for i in range(len(x_edges) - 1):
         for j in range(len(y_edges) - 1):
@@ -313,6 +406,7 @@ def add_grid_heatmap(
                 opacity=opacity,
                 hoverinfo="skip",
                 showlegend=False,
+                name=f"heatmap-cell:{group_key or 'all'}",
             ))
 
     if draw_grid_lines:
@@ -326,7 +420,22 @@ def add_grid_heatmap(
             x_edges,
             y_edges,
         )
+    if reorder_below_lines:
+        _reorder_heatmap_traces(fig)
     return {"vmax": float(vmax), "nonzero": int((counts > 0).sum())}
+
+
+def _reorder_heatmap_traces(fig: go.Figure) -> None:
+    heatmap_traces = []
+    other_traces = []
+    for tr in list(fig.data):
+        name = getattr(tr, "name", "") or ""
+        if name.startswith("heatmap-cell:") or name == "heatmap-scale":
+            heatmap_traces.append(tr)
+        else:
+            other_traces.append(tr)
+    if heatmap_traces:
+        fig.data = tuple(heatmap_traces + other_traces)
 
 
 def add_event_markers(
@@ -339,10 +448,16 @@ def add_event_markers(
     marker_color: str = "#4a4a4a",
     marker_size: int = 7,
     opacity: float = 0.7,
+    markeralpha: Optional[float] = None,
 ):
     if df.empty:
         return
     markertype = (markertype or "point").strip().lower()
+    if markeralpha is not None:
+        try:
+            opacity = float(markeralpha)
+        except Exception:
+            pass
 
     def _map_xy(x, y):
         if orientation == "vertical":
@@ -652,6 +767,29 @@ def build_canvas(
             )
         ] if (filtertype and filtertype[0] == "dropdown") else [],
     )
+
+    if orientation == "vertical":
+        fig.add_annotation(
+            x=1.02, y=0.2,
+            ax=0, ay=60,
+            xref="paper", yref="paper",
+            showarrow=True,
+            arrowhead=3,
+            arrowsize=1,
+            arrowwidth=1.4,
+            arrowcolor="rgba(0,0,0,0.6)",
+        )
+    else:
+        fig.add_annotation(
+            x=0.78, y=-0.02,
+            ax=80, ay=0,
+            xref="paper", yref="paper",
+            showarrow=True,
+            arrowhead=3,
+            arrowsize=1,
+            arrowwidth=1.4,
+            arrowcolor="rgba(0,0,0,0.6)",
+        )
 
     if filtertype and filtertype[0] == "slider":
         fig.update_layout(
