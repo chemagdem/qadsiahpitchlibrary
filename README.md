@@ -227,3 +227,28 @@ add_event_markers(fig, df, orientation="horizontal", markertype="arrow", markera
   "markeralpha": 0.6
 }
 ```
+
+## Example of use (test)
+
+```json
+{
+  "provider": "impect",
+  "pitch": "opp half",
+  "orientation": "vertical",
+  "grid": "5x5",
+  "gridcolor": "whitetored",
+  "filtertype": "dropdown",
+  "filtercontent": "playerName",
+  "squadId": 5067,
+  "matchIds": 228025,
+  "against": 0,
+  "metric": ["BYPASSED_OPPONENTS"],
+  "markertype": "point",
+  "markeralpha": 0.6
+}
+```
+
+
+## Test Output
+
+![Demo](assets/demo.png)
