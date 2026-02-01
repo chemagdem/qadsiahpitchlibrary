@@ -146,7 +146,7 @@ def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_ed
         ))
 
 
-def _draw_wings_grid(fig, orientation):
+def _draw_wings_grid(fig, orientation, x_min, x_max):
     line_color = "rgba(120,120,120,0.6)"
     line_width = 1.2
     lanes = (-20.16, 20.16)
@@ -156,8 +156,8 @@ def _draw_wings_grid(fig, orientation):
         return (x, y) if orientation == "vertical" else (y, x)
 
     for y in lanes:
-        (x0, y0) = _swap(X_MIN, y)
-        (x1, y1) = _swap(X_MAX, y)
+        (x0, y0) = _swap(x_min, y)
+        (x1, y1) = _swap(x_max, y)
         fig.add_trace(go.Scatter(
             x=[x0, x1],
             y=[y0, y1],
@@ -168,6 +168,8 @@ def _draw_wings_grid(fig, orientation):
         ))
 
     for x in (-box_y, box_y):
+        if x < x_min or x > x_max:
+            continue
         (x0, y0) = _swap(x, lanes[0])
         (x1, y1) = _swap(x, lanes[1])
         fig.add_trace(go.Scatter(
@@ -180,6 +182,8 @@ def _draw_wings_grid(fig, orientation):
         ))
 
     for x in (-third_y, 0.0, third_y):
+        if x < x_min or x > x_max:
+            continue
         (x0, y0) = _swap(x, Y_MIN)
         (x1, y1) = _swap(x, Y_MAX)
         fig.add_trace(go.Scatter(
@@ -754,7 +758,7 @@ def build_canvas(
         if grid_key == "set piece":
             _draw_set_piece_grid(fig, orientation)
         elif grid_key == "wings":
-            _draw_wings_grid(fig, orientation)
+            _draw_wings_grid(fig, orientation, x_min, x_max)
         elif grid_key in (
             "own third", "own_third", "own-third",
             "middle third", "middle_third", "middle-third",
