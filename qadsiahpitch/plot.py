@@ -108,6 +108,8 @@ def _grid_bins(grid: str) -> Tuple[int, int]:
         return 0, 0
     if grid == "set piece":
         return 0, 0
+    if grid == "wings":
+        return 0, 0
     m = re.match(r"^(\d+)\s*x\s*(\d+)$", grid)
     if not m:
         return 0, 0
@@ -143,6 +145,51 @@ def _draw_grid_lines(fig, x_min, x_max, y_min, y_max, orientation, x_edges, y_ed
             showlegend=False,
         ))
 
+
+def _draw_wings_grid(fig, orientation):
+    line_color = "rgba(120,120,120,0.6)"
+    line_width = 1.2
+    lanes = (-20.16, 20.16)
+    box_y, third_y = 36.0, 25.0
+
+    def _swap(x, y):
+        return (x, y) if orientation == "vertical" else (y, x)
+
+    for y in lanes:
+        (x0, y0) = _swap(X_MIN, y)
+        (x1, y1) = _swap(X_MAX, y)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=dict(color=line_color, width=line_width),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    for x in (-box_y, box_y):
+        (x0, y0) = _swap(x, lanes[0])
+        (x1, y1) = _swap(x, lanes[1])
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=dict(color=line_color, width=line_width),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    for x in (-third_y, 0.0, third_y):
+        (x0, y0) = _swap(x, Y_MIN)
+        (x1, y1) = _swap(x, Y_MAX)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=dict(color=line_color, width=line_width),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
 
 def _set_piece_zones():
     zones_right = [
@@ -187,6 +234,10 @@ def _grid_edges_for_option(grid: str, pitch_key: str):
         return None, None
     if grid_key == "set piece":
         return None, None
+    if grid_key == "wings":
+        x_edges = np.array([X_MIN, -36.0, -25.0, 0.0, 25.0, 36.0, X_MAX])
+        y_edges = np.array([Y_MIN, -20.16, 20.16, Y_MAX])
+        return x_edges, y_edges
     x_min, x_max = _pitch_x_range(pitch_key)
     x_bins, y_bins = _grid_bins(grid_key)
     if x_bins > 0 and y_bins > 0:
@@ -702,6 +753,8 @@ def build_canvas(
     if grid_key and grid_key not in ("none", "null"):
         if grid_key == "set piece":
             _draw_set_piece_grid(fig, orientation)
+        elif grid_key == "wings":
+            _draw_wings_grid(fig, orientation)
         elif grid_key in (
             "own third", "own_third", "own-third",
             "middle third", "middle_third", "middle-third",

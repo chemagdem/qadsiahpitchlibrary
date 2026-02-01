@@ -1,4 +1,4 @@
-﻿# qadsiahpitch
+# qadsiahpitch
 
 A lightweight Python library for building football pitch maps in Plotly.
 It focuses on the **canvas** (pitch + lines + grid + UI), while you add your own data traces.
@@ -7,7 +7,7 @@ What it includes:
 - Pitch canvas (full / own half / opp half, horizontal / vertical).
 - Configurable grids and frequency heatmaps.
 - UI filters (dropdown / slider).
-- Event markers as points or arrows (start â†’ end).
+- Event markers as points or arrows (start → end).
 - BigQuery helpers for Impect/SkillCorner/StatsBomb pipelines.
 
 ---
@@ -51,6 +51,7 @@ Defines coordinate system and default columns.
   - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
   - `"set piece"`
   - `"wings"`
+  - `"wings"` (lane + third grid with box lines)
   - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
 Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
@@ -62,7 +63,7 @@ Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
 Options:
 - `"whitetoteal"` (default)
 - `"whitetored"`
-- Custom list of 2 to 5 colors (hex or rgb strings)
+- Custom list of 2–5 colors (hex or rgb strings)
 
 Examples:
 ```json
@@ -74,6 +75,7 @@ Examples:
 ### UI filters
 
 - `filtertype`: `"dropdown"` or `"slider"`
+  - Can also be a list: `["dropdown", "dropdown"]`
 - `filtercontent`: BigQuery column(s) used by the filter UI
   - Example: `"playerName"` or `["playerName", "playerId"]`
 
@@ -113,7 +115,7 @@ Returns: `{"vmax": ..., "nonzero": ...}`.
 ### `add_event_markers(fig, df, orientation, markertype="point", markeralpha=None, ...)`
 Draws events:
 - `point`: dot at `x/y`.
-- `arrow`: line `x/y â†’ x_end/y_end` + end dot.
+- `arrow`: line `x/y → x_end/y_end` + end dot.
 
 Requires `x`, `y` and optionally `x_end`, `y_end`.
 
@@ -123,7 +125,7 @@ Requires `x`, `y` and optionally `x_end`, `y_end`.
 
 ### `parse_list(raw)`
 Converts anything into a list:
-- `"a,b" â†’ ["a","b"]`, `["a"] â†’ ["a"]`, `None â†’ []`
+- `"a,b" → ["a","b"]`, `["a"] → ["a"]`, `None → []`
 
 ### `parse_metric_filters(raw_metric)`
 Supports the syntax:
@@ -228,28 +230,3 @@ add_event_markers(fig, df, orientation="horizontal", markertype="arrow", markera
   "markeralpha": 0.6
 }
 ```
-
-## Example of use (test)
-
-```json
-{
-  "provider": "impect",
-  "pitch": "opp half",
-  "orientation": "vertical",
-  "grid": "5x5",
-  "gridcolor": "whitetored",
-  "filtertype": "dropdown",
-  "filtercontent": "playerName",
-  "squadId": 5067,
-  "matchIds": 228025,
-  "against": 0,
-  "metric": ["BYPASSED_OPPONENTS"],
-  "markertype": "point",
-  "markeralpha": 0.6
-}
-```
-
-
-## Test Output
-
-![Demo](assets/demo.png)
