@@ -829,7 +829,7 @@ def build_canvas(
 
     if orientation == "vertical":
         fig.add_annotation(
-            x=1.02, y=0.2,
+            x=0.97, y=0.2,
             ax=0, ay=60,
             xref="paper", yref="paper",
             showarrow=True,
@@ -840,7 +840,7 @@ def build_canvas(
         )
     else:
         fig.add_annotation(
-            x=0.78, y=-0.02,
+            x=0.73, y=-0.02,
             ax=80, ay=0,
             xref="paper", yref="paper",
             showarrow=True,

@@ -1,4 +1,4 @@
-# qadsiahpitch
+﻿# qadsiahpitch
 
 A lightweight Python library for building football pitch maps in Plotly.
 It focuses on the **canvas** (pitch + lines + grid + UI), while you add your own data traces.
@@ -7,7 +7,7 @@ What it includes:
 - Pitch canvas (full / own half / opp half, horizontal / vertical).
 - Configurable grids and frequency heatmaps.
 - UI filters (dropdown / slider).
-- Event markers as points or arrows (start → end).
+- Event markers as points or arrows (start â†’ end).
 - BigQuery helpers for Impect/SkillCorner/StatsBomb pipelines.
 
 ---
@@ -50,6 +50,7 @@ Defines coordinate system and default columns.
   - `"none"` / `null`
   - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
   - `"set piece"`
+  - `"wings"` (lane + third grid with box lines)
   - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
 Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
@@ -61,7 +62,7 @@ Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
 Options:
 - `"whitetoteal"` (default)
 - `"whitetored"`
-- Custom list of 2–5 colors (hex or rgb strings)
+- Custom list of 2â€“5 colors (hex or rgb strings)
 
 Examples:
 ```json
@@ -113,7 +114,7 @@ Returns: `{"vmax": ..., "nonzero": ...}`.
 ### `add_event_markers(fig, df, orientation, markertype="point", markeralpha=None, ...)`
 Draws events:
 - `point`: dot at `x/y`.
-- `arrow`: line `x/y → x_end/y_end` + end dot.
+- `arrow`: line `x/y â†’ x_end/y_end` + end dot.
 
 Requires `x`, `y` and optionally `x_end`, `y_end`.
 
@@ -123,7 +124,7 @@ Requires `x`, `y` and optionally `x_end`, `y_end`.
 
 ### `parse_list(raw)`
 Converts anything into a list:
-- `"a,b" → ["a","b"]`, `["a"] → ["a"]`, `None → []`
+- `"a,b" â†’ ["a","b"]`, `["a"] â†’ ["a"]`, `None â†’ []`
 
 ### `parse_metric_filters(raw_metric)`
 Supports the syntax:

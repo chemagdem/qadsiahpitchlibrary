@@ -280,8 +280,8 @@ def plot_from_bq(body: Dict) -> Any:
 if __name__ == "__main__":
     test_body = {
         "provider": "impect",
-        "pitch": "full",
-        "orientation": "horizontal",
+        "pitch": "opp half",
+        "orientation": "vertical",
         "grid": "5x3", #choose between "5x3", "20x20", "set piece", "own third", "final third", "5x5"
         "filtertype": "dropdown",
         "filtercontent": "playerName",
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         "metric": ["FROM actionType import PASS", "FROM result import SUCCESS"],
         "markertype": "arrow", #choose between "point", "arrow"
         "markeralpha": 0.5, #marker opacity
-        "gridcolor": "whitetored" #choose between "whitetoteal", "blacktoteal" or put between 2-5 rgb/hex colors (e.g. "gridcolor": ["rgb(255,255,255)", "rgb(255,140,0)", "rgb(70,130,180)", "rgb(138,43,226)"]')
+        "gridcolor": ["#ff0054", "#00d4ff", "#7cff00", "#ffd500", "#6a00ff"],
     }
 
     print(f"[DEBUG] test_body pitch={test_body.get('pitch')} grid={test_body.get('grid')}")
