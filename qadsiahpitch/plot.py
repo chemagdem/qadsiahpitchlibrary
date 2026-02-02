@@ -48,6 +48,23 @@ def _interp_color(colorscale, value, vmax):
     return colorscale[-1][1]
 
 
+def _flip_x_values(x_vals, against: int):
+    if against != 1:
+        return x_vals
+    numeric_vals = [x for x in x_vals if x is not None and not pd.isna(x)]
+    if not numeric_vals:
+        return x_vals
+    x_min = float(np.nanmin(numeric_vals))
+    x_max = float(np.nanmax(numeric_vals))
+    if x_min >= -52.5 and x_max <= 52.5:
+        return [(-x if x is not None and not pd.isna(x) else x) for x in x_vals]
+    if x_min >= 0 and x_max <= 105:
+        return [(105 - x if x is not None and not pd.isna(x) else x) for x in x_vals]
+    if x_min >= 0 and x_max <= 120:
+        return [(120 - x if x is not None and not pd.isna(x) else x) for x in x_vals]
+    return [(-x if x is not None and not pd.isna(x) else x) for x in x_vals]
+
+
 def _add_colorbar(fig, colorscale):
     gradient = np.linspace(0, 1, 200)
     fig.add_trace(
@@ -312,9 +329,11 @@ def add_grid_heatmap(
     show_colorbar: bool = True,
     group_key: Optional[str] = None,
     reorder_below_lines: bool = True,
+    against: int = 0,
 ):
     pitch_key = _normalize_pitch(pitch)
     grid_key = str(grid).lower().strip() if grid is not None else ""
+    x_vals = _flip_x_values(x_vals, against)
     if grid_key == "set piece":
         zones = _set_piece_zones()
         if not zones:
@@ -506,6 +525,7 @@ def add_event_markers(
     marker_size: int = 7,
     opacity: float = 0.7,
     markeralpha: Optional[float] = None,
+    against: int = 0,
 ):
     if df.empty:
         return
@@ -521,14 +541,18 @@ def add_event_markers(
             return y, x
         return x, y
 
+    x_vals = _flip_x_values(df["x"].values, against)
+    y_vals = df["y"].values
     if markertype == "arrow":
         if "x_end" not in df.columns or "y_end" not in df.columns:
             return
+        x_end_vals = _flip_x_values(df["x_end"].values, against)
+        y_end_vals = df["y_end"].values
         xs = []
         ys = []
-        for _, row in df.iterrows():
-            x0, y0 = _map_xy(row["x"], row["y"])
-            x1, y1 = _map_xy(row["x_end"], row["y_end"])
+        for x0_raw, y0_raw, x1_raw, y1_raw in zip(x_vals, y_vals, x_end_vals, y_end_vals):
+            x0, y0 = _map_xy(x0_raw, y0_raw)
+            x1, y1 = _map_xy(x1_raw, y1_raw)
             xs.extend([x0, x1, None])
             ys.extend([y0, y1, None])
         fig.add_scatter(
@@ -542,8 +566,8 @@ def add_event_markers(
             name="event-arrow",
         )
         fig.add_scatter(
-            x=[_map_xy(x, y)[0] for x, y in zip(df["x_end"], df["y_end"])],
-            y=[_map_xy(x, y)[1] for x, y in zip(df["x_end"], df["y_end"])],
+            x=[_map_xy(x, y)[0] for x, y in zip(x_end_vals, y_end_vals)],
+            y=[_map_xy(x, y)[1] for x, y in zip(x_end_vals, y_end_vals)],
             mode="markers",
             marker=dict(size=max(3, int(marker_size * 0.7)), color=marker_color),
             opacity=opacity,
@@ -554,8 +578,8 @@ def add_event_markers(
         return
 
     fig.add_scatter(
-        x=[_map_xy(x, y)[0] for x, y in zip(df["x"], df["y"])],
-        y=[_map_xy(x, y)[1] for x, y in zip(df["x"], df["y"])],
+        x=[_map_xy(x, y)[0] for x, y in zip(x_vals, y_vals)],
+        y=[_map_xy(x, y)[1] for x, y in zip(x_vals, y_vals)],
         mode="markers",
         marker=dict(size=marker_size, color=marker_color, line=dict(color="black", width=0.5), opacity=opacity),
         hoverinfo="skip",
