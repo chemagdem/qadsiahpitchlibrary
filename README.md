@@ -90,7 +90,7 @@ Examples:
 - `against`: used **only** to determine which team to analyze
   - `0` = same as `squadId`
   - `1` = opponent team
-  - When `against=1`, the library flips the X axis so opponent events attack in the same direction.
+  - When `against=1`, the library flips X and Y so opponent events attack in the same direction and keep left/right consistency.
 
 ---
 

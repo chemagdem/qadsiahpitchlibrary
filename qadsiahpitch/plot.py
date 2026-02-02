@@ -65,6 +65,23 @@ def _flip_x_values(x_vals, against: int):
     return [(-x if x is not None and not pd.isna(x) else x) for x in x_vals]
 
 
+def _flip_y_values(y_vals, against: int):
+    if against != 1:
+        return y_vals
+    numeric_vals = [y for y in y_vals if y is not None and not pd.isna(y)]
+    if not numeric_vals:
+        return y_vals
+    y_min = float(np.nanmin(numeric_vals))
+    y_max = float(np.nanmax(numeric_vals))
+    if y_min >= -34.0 and y_max <= 34.0:
+        return [(-y if y is not None and not pd.isna(y) else y) for y in y_vals]
+    if y_min >= 0 and y_max <= 68:
+        return [(68 - y if y is not None and not pd.isna(y) else y) for y in y_vals]
+    if y_min >= 0 and y_max <= 80:
+        return [(80 - y if y is not None and not pd.isna(y) else y) for y in y_vals]
+    return [(-y if y is not None and not pd.isna(y) else y) for y in y_vals]
+
+
 def _add_colorbar(fig, colorscale):
     gradient = np.linspace(0, 1, 200)
     fig.add_trace(
@@ -334,6 +351,7 @@ def add_grid_heatmap(
     pitch_key = _normalize_pitch(pitch)
     grid_key = str(grid).lower().strip() if grid is not None else ""
     x_vals = _flip_x_values(x_vals, against)
+    y_vals = _flip_y_values(y_vals, against)
     if grid_key == "set piece":
         zones = _set_piece_zones()
         if not zones:
@@ -542,12 +560,12 @@ def add_event_markers(
         return x, y
 
     x_vals = _flip_x_values(df["x"].values, against)
-    y_vals = df["y"].values
+    y_vals = _flip_y_values(df["y"].values, against)
     if markertype == "arrow":
         if "x_end" not in df.columns or "y_end" not in df.columns:
             return
         x_end_vals = _flip_x_values(df["x_end"].values, against)
-        y_end_vals = df["y_end"].values
+        y_end_vals = _flip_y_values(df["y_end"].values, against)
         xs = []
         ys = []
         for x0_raw, y0_raw, x1_raw, y1_raw in zip(x_vals, y_vals, x_end_vals, y_end_vals):
