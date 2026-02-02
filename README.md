@@ -212,6 +212,37 @@ add_event_markers(fig, df, orientation="horizontal", markertype="arrow", markera
 
 ---
 
+## Custom Plotly layer example
+
+Add your own traces on top of the pitch:
+
+```python
+import plotly.graph_objects as go
+from qadsiahpitch.plot import build_canvas
+
+fig = build_canvas(
+    provider="impect",
+    pitch="full",
+    grid="5x5",
+    orientation="vertical",
+    filtercontent=["playerName"],
+    filtertype=["dropdown"],
+)
+
+# Example: custom markers
+fig.add_trace(go.Scatter(
+    x=[0, 10, -15],
+    y=[20, -5, 30],
+    mode="markers",
+    marker=dict(size=8, color="#ffcc00"),
+    name="Custom points",
+))
+
+fig.write_html("custom_layer_example.html", include_plotlyjs="cdn")
+```
+
+---
+
 ## Example payload (test)
 
 ```json
