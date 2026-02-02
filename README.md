@@ -84,6 +84,7 @@ Examples:
   - `"point"`: dot at event location
   - `"arrow"`: line `x/y or x_end/y_end` + end dot
 - `markeralpha`: float (0/1) controlling marker opacity
+- `markercolor`: hex/rgb string to control marker and arrow color
 
 ### Team selection
 

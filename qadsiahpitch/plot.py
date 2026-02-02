@@ -544,6 +544,7 @@ def add_event_markers(
     opacity: float = 0.7,
     markeralpha: Optional[float] = None,
     against: int = 0,
+    markercolor: Optional[str] = None,
 ):
     if df.empty:
         return
@@ -553,6 +554,9 @@ def add_event_markers(
             opacity = float(markeralpha)
         except Exception:
             pass
+    if markercolor:
+        marker_color = markercolor
+        line_color = markercolor
 
     def _map_xy(x, y):
         if orientation == "vertical":
