@@ -1,4 +1,4 @@
-﻿# qadsiahpitch
+﻿# qadsiahpitch - v0.1.1
 
 A lightweight Python library for building football pitch maps in Plotly.
 It focuses on the **canvas** (pitch + lines + grid + UI), while you add your own data traces.
