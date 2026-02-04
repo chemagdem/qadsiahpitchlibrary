@@ -72,6 +72,12 @@ analysis_team_ids = resolve_analysis_team_ids(client, match_ids, squad_id, oppon
 coord_columns = resolve_coord_columns(provider)
 df = fetch_events_impect(client, T_EVENTS, match_ids, analysis_team_ids, metrics, filters, coord_columns)
 
+# If you need complex logic (e.g., "recoveries whose possession ends in a shot"),
+# do it here by joining or filtering with extra queries/columns. Example idea:
+# 1) Query possessions that end with a SHOT and collect their possessionId.
+# 2) Filter recoveries to those possessionId values.
+# This lets you plot a derived concept, not just a single column filter.
+
 # Filter events to the requested pitch window.
 pitch_key = _normalize_pitch(pitch)
 x_min, x_max = _pitch_x_range(pitch_key)
