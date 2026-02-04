@@ -216,10 +216,10 @@ add_event_markers(fig, df, orientation="horizontal", markertype="arrow", markera
 
 This is a compact, provider-agnostic Impect example that includes **every payload parameter** from this README (provider, pitch, orientation, grid, gridcolor, filtertype/content, squadId/opponentId, matchIds/matchweeks/iterationId, against, metric, eventType/event, markertype/markeralpha/markercolor), plus dropdown filtering for heatmaps and markers.
 
-See the local test script:
+See the example script in this repo:
 
 ```
-qadsiahpitch_testing/main_impect_minimal_all.py
+examples/minimal_use_example.py
 ```
 
 Run it locally to generate the HTML output.
