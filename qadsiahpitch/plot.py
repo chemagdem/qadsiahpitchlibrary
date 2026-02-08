@@ -845,7 +845,9 @@ def build_canvas(
         filtercontent = [filtercontent]
     if not isinstance(filtertype, list):
         filtertype = [filtertype]
-    filtertype = filtertype or ["dropdown"]
+    # Only default to dropdown when filters are provided.
+    if not filtertype:
+        filtertype = ["dropdown"] if filtercontent else []
 
     values = ["All"]
     buttons = [dict(label="All", method="update", args=[{"visible": [True] * len(fig.data)}])]
