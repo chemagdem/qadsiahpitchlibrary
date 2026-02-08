@@ -307,6 +307,10 @@ def _grid_edges_for_option(grid: str, pitch_key: str):
         return None, None
     if grid_key == "set piece":
         return None, None
+    if grid_key == "tactical":
+        x_edges = np.array([X_MIN, -36.0, -17.5, 17.5, 36.0, X_MAX])
+        y_edges = np.array([Y_MIN, -20.16, -9.16, 9.16, 20.16, Y_MAX])
+        return x_edges, y_edges
     if grid_key == "wings":
         x_edges = np.array([X_MIN, -36.0, -25.0, 0.0, 25.0, 36.0, X_MAX])
         y_edges = np.array([Y_MIN, -20.16, 20.16, Y_MAX])
@@ -844,7 +848,9 @@ def build_canvas(
         elif grid_key == "wings":
             _draw_wings_grid(fig, orientation, x_min, x_max)
         elif grid_key == "tactical":
-            _draw_tactical_grid(fig, orientation)
+            x_edges, y_edges = _grid_edges_for_option("tactical", pitch_key)
+            if x_edges is not None and y_edges is not None:
+                _draw_grid_lines(fig, x_edges[0], x_edges[-1], Y_MIN, Y_MAX, orientation, x_edges, y_edges)
         elif grid_key in (
             "own third", "own_third", "own-third",
             "middle third", "middle_third", "middle-third",

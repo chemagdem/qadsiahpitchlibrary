@@ -289,6 +289,10 @@ def build_canvas(
         x_edges = np.linspace(x_min, x_max, x_bins + 1)
         y_edges = np.linspace(Y_MIN, Y_MAX, y_bins + 1)
         _draw_grid_lines(fig, x_min, x_max, Y_MIN, Y_MAX, orientation, x_edges, y_edges)
+    elif grid_key == "tactical":
+        x_edges = np.array([X_MIN, -36.0, -17.5, 17.5, 36.0, X_MAX])
+        y_edges = np.array([Y_MIN, -20.16, -9.16, 9.16, 20.16, Y_MAX])
+        _draw_grid_lines(fig, x_min, x_max, Y_MIN, Y_MAX, orientation, x_edges, y_edges)
     elif grid_key in ("own third", "own_third", "own-third", "middle third", "middle_third", "middle-third", "final third", "final_third", "final-third"):
         third = (X_MAX - X_MIN) / 3.0
         x_edges = [X_MIN + third, X_MIN + 2 * third]
