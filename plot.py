@@ -179,7 +179,7 @@ def _draw_tactical_grid(fig, orientation):
     # Tactical grid based on fixed Impect coordinates
     vertical_lines = [-36.0, -17.5, 17.5, 36.0]
     horizontal_lines = [-20.16, -9.16, 9.16, 20.16]
-    line_style = dict(color="red", width=1, dash="dash")
+    line_style = dict(color="rgba(120,120,120,0.6)", width=0.8)
 
     def _swap(x, y):
         return (y, x) if orientation == "vertical" else (x, y)
