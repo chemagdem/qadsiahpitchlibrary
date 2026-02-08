@@ -394,12 +394,23 @@ def add_grid_heatmap(
     group_key: Optional[str] = None,
     reorder_below_lines: bool = True,
     against: int = 0,
+    colorbarmin: Optional[object] = None,
+    colorbarmax: Optional[object] = None,
 ):
     pitch_key = _normalize_pitch(pitch)
     grid_key = str(grid).lower().strip() if grid is not None else ""
     x_vals = _flip_x_values(x_vals, against)
     y_vals = _flip_y_values(y_vals, against)
     y_vals = _flip_y_for_horizontal(y_vals, orientation)
+    def _colorbar_labels():
+        min_label = "Fewer"
+        max_label = "Higher"
+        if colorbarmin not in (None, ""):
+            min_label = str(colorbarmin)
+        if colorbarmax not in (None, ""):
+            max_label = str(colorbarmax)
+        return min_label, max_label
+
     if grid_key == "set piece":
         zones = _set_piece_zones()
         if not zones:
@@ -415,6 +426,7 @@ def add_grid_heatmap(
         vmax = counts.max() if counts.max() > 0 else 1
         colorscale = _resolve_grid_colorscale(gridcolor)
         if show_colorbar:
+            min_label, max_label = _colorbar_labels()
             fig.add_scatter(
                 x=[X_MIN, X_MIN],
                 y=[Y_MIN, Y_MIN],
@@ -435,7 +447,7 @@ def add_grid_heatmap(
                         outlinewidth=0,
                         tickmode="array",
                         tickvals=[0, vmax],
-                        ticktext=["Fewer", "Higher"],
+                        ticktext=[min_label, max_label],
                         tickfont=dict(size=9),
                     ),
                 ),
@@ -494,6 +506,7 @@ def add_grid_heatmap(
     colorscale = _resolve_grid_colorscale(gridcolor)
 
     if show_colorbar:
+        min_label, max_label = _colorbar_labels()
         fig.add_scatter(
             x=[x_edges[0], x_edges[0]],
             y=[y_edges[0], y_edges[0]],
@@ -514,7 +527,7 @@ def add_grid_heatmap(
                         outlinewidth=0,
                         tickmode="array",
                         tickvals=[0, vmax],
-                        ticktext=["Fewer", "Higher"],
+                        ticktext=[min_label, max_label],
                         tickfont=dict(size=9),
                 ),
             ),
