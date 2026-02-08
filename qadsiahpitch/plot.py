@@ -144,6 +144,8 @@ def _grid_bins(grid: str) -> Tuple[int, int]:
         return 0, 0
     if grid == "wings":
         return 0, 0
+    if grid == "tactical":
+        return 0, 0
     m = re.match(r"^(\d+)\s*x\s*(\d+)$", grid)
     if not m:
         return 0, 0
@@ -229,6 +231,39 @@ def _draw_wings_grid(fig, orientation, x_min, x_max):
             showlegend=False,
         ))
 
+
+def _draw_tactical_grid(fig, orientation):
+    # Tactical grid based on fixed Impect coordinates
+    vertical_lines = [-36.0, -17.5, 17.5, 36.0]
+    horizontal_lines = [-20.16, -9.16, 9.16, 20.16]
+    line_style = dict(color="red", width=1, dash="dash")
+
+    def _swap(x, y):
+        return (x, y) if orientation == "vertical" else (y, x)
+
+    for x in vertical_lines:
+        (x0, y0) = _swap(Y_MIN, x)
+        (x1, y1) = _swap(Y_MAX, x)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=line_style,
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+    for y in horizontal_lines:
+        (x0, y0) = _swap(y, X_MIN)
+        (x1, y1) = _swap(y, X_MAX)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=line_style,
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
 def _set_piece_zones():
     zones_right = [
         (27.0, 52.5, -34.00, -20.16),
@@ -276,6 +311,8 @@ def _grid_edges_for_option(grid: str, pitch_key: str):
         x_edges = np.array([X_MIN, -36.0, -25.0, 0.0, 25.0, 36.0, X_MAX])
         y_edges = np.array([Y_MIN, -20.16, 20.16, Y_MAX])
         return x_edges, y_edges
+    if grid_key == "tactical":
+        return None, None
     x_min, x_max = _pitch_x_range(pitch_key)
     x_bins, y_bins = _grid_bins(grid_key)
     if x_bins > 0 and y_bins > 0:
@@ -806,6 +843,8 @@ def build_canvas(
             _draw_set_piece_grid(fig, orientation)
         elif grid_key == "wings":
             _draw_wings_grid(fig, orientation, x_min, x_max)
+        elif grid_key == "tactical":
+            _draw_tactical_grid(fig, orientation)
         elif grid_key in (
             "own third", "own_third", "own-third",
             "middle third", "middle_third", "middle-third",

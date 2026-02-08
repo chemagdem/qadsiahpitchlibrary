@@ -90,6 +90,8 @@ def _grid_bins(grid: str) -> Tuple[int, int]:
         return 0, 0
     if grid == "set piece":
         return 0, 0
+    if grid == "tactical":
+        return 0, 0
     m = re.match(r"^(\d+)\s*x\s*(\d+)$", grid)
     if not m:
         return 0, 0
@@ -168,6 +170,39 @@ def _draw_set_piece_grid(fig, orientation):
             y=ys,
             mode="lines",
             line=dict(color=line_color, width=0.8),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+
+def _draw_tactical_grid(fig, orientation):
+    # Tactical grid based on fixed Impect coordinates
+    vertical_lines = [-36.0, -17.5, 17.5, 36.0]
+    horizontal_lines = [-20.16, -9.16, 9.16, 20.16]
+    line_style = dict(color="red", width=1, dash="dash")
+
+    def _swap(x, y):
+        return (y, x) if orientation == "vertical" else (x, y)
+
+    for x in vertical_lines:
+        x0, y0 = _swap(x, Y_MIN)
+        x1, y1 = _swap(x, Y_MAX)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=line_style,
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+    for y in horizontal_lines:
+        x0, y0 = _swap(X_MIN, y)
+        x1, y1 = _swap(X_MAX, y)
+        fig.add_trace(go.Scatter(
+            x=[x0, x1],
+            y=[y0, y1],
+            mode="lines",
+            line=line_style,
             hoverinfo="skip",
             showlegend=False,
         ))
@@ -258,6 +293,8 @@ def build_canvas(
         third = (X_MAX - X_MIN) / 3.0
         x_edges = [X_MIN + third, X_MIN + 2 * third]
         _draw_grid_lines(fig, x_min, x_max, Y_MIN, Y_MAX, orientation, x_edges, [])
+    elif grid_key == "tactical":
+        _draw_tactical_grid(fig, orientation)
     elif grid_key == "set piece":
         _draw_set_piece_grid(fig, orientation)
 
