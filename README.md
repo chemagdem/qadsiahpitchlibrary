@@ -118,9 +118,10 @@ Set `attackingarrow="no"` to hide it.
 Builds the pitch, axes, lines, and grid lines only.
 Returns a `plotly.graph_objects.Figure`.
 
-### `add_grid_heatmap(fig, x_vals, y_vals, pitch, grid, orientation, gridcolor=None, opacity=0.7)`
+### `add_grid_heatmap(fig, x_vals, y_vals, pitch, grid, orientation, gridcolor=None, opacity=0.7, colorbarmin=None, colorbarmax=None)`
 Paints the grid by event frequency (heatmap cells drawn **under** pitch lines).
 Returns: `{"vmax": ..., "nonzero": ...}`.
+You can customize colorbar labels with `colorbarmin` and `colorbarmax`.
 
 ### `add_event_markers(fig, df, orientation, markertype="point", markeralpha=None, ...)`
 Draws events:
