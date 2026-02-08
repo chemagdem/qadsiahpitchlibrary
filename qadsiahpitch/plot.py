@@ -82,6 +82,12 @@ def _flip_y_values(y_vals, against: int):
     return [(-y if y is not None and not pd.isna(y) else y) for y in y_vals]
 
 
+def _flip_y_for_horizontal(y_vals, orientation: str):
+    if (orientation or "").strip().lower() != "horizontal":
+        return y_vals
+    return [(-y if y is not None and not pd.isna(y) else y) for y in y_vals]
+
+
 def _add_colorbar(fig, colorscale):
     gradient = np.linspace(0, 1, 200)
     fig.add_trace(
@@ -393,6 +399,7 @@ def add_grid_heatmap(
     grid_key = str(grid).lower().strip() if grid is not None else ""
     x_vals = _flip_x_values(x_vals, against)
     y_vals = _flip_y_values(y_vals, against)
+    y_vals = _flip_y_for_horizontal(y_vals, orientation)
     if grid_key == "set piece":
         zones = _set_piece_zones()
         if not zones:
@@ -606,11 +613,13 @@ def add_event_markers(
 
     x_vals = _flip_x_values(df["x"].values, against)
     y_vals = _flip_y_values(df["y"].values, against)
+    y_vals = _flip_y_for_horizontal(y_vals, orientation)
     if markertype == "arrow":
         if "x_end" not in df.columns or "y_end" not in df.columns:
             return
         x_end_vals = _flip_x_values(df["x_end"].values, against)
         y_end_vals = _flip_y_values(df["y_end"].values, against)
+        y_end_vals = _flip_y_for_horizontal(y_end_vals, orientation)
         xs = []
         ys = []
         for x0_raw, y0_raw, x1_raw, y1_raw in zip(x_vals, y_vals, x_end_vals, y_end_vals):
