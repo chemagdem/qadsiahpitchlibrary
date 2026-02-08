@@ -43,6 +43,7 @@ Defines coordinate system and default columns.
 
 - `pitch`: `"full"`, `"own half"`, `"opp half"`
 - `orientation`: `"horizontal"` or `"vertical"`
+  - **Horizontal** orientation attacks to the **right** by default (final third is the right third).
 
 ### Grid
 
@@ -51,6 +52,7 @@ Defines coordinate system and default columns.
   - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
   - `"set piece"`
   - `"wings"` (lane + third grid with box lines)
+  - `"tactical"` (fixed tactical grid lines)
   - `"own third"`, `"middle third"`, `"final third"` (each third is split into 3 lanes)
 
 Grid lines are always gray with 60% opacity (`rgba(120,120,120,0.6)`).
@@ -93,19 +95,26 @@ Examples:
   - `1` = opponent team
   - When `against=1`, the library flips X and Y so opponent events attack in the same direction and keep left/right consistency.
 
+### Attack direction arrow
+
+- `attackingarrow`: `"yes"` / `"no"` (default `"yes"`)
+  - Controls whether the attack direction arrow is shown.
+
 ---
 
 ## Attack direction arrow
 
-The canvas always draws an attack direction arrow:
+The canvas draws an attack direction arrow by default:
 - **Vertical** pitch: arrow points **up** on the right side.
-- **Horizontal** pitch: arrow points **left**, below the field.
+- **Horizontal** pitch: arrow points **right**, below the field.
+
+Set `attackingarrow="no"` to hide it.
 
 ---
 
 ## Core API
 
-### `build_canvas(provider, pitch, grid, orientation, filtercontent, filtertype)`
+### `build_canvas(provider, pitch, grid, orientation, filtercontent, filtertype, attackingarrow="yes")`
 Builds the pitch, axes, lines, and grid lines only.
 Returns a `plotly.graph_objects.Figure`.
 
