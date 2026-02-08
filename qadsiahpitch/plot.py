@@ -771,6 +771,7 @@ def build_canvas(
     orientation: str,
     filtercontent: List[str],
     filtertype: List[str],
+    attackingarrow: Optional[object] = "yes",
 ) -> go.Figure:
     fig = go.Figure()
 
@@ -875,28 +876,36 @@ def build_canvas(
         ] if (filtertype and filtertype[0] == "dropdown") else [],
     )
 
-    if orientation == "vertical":
-        fig.add_annotation(
-            x=0.97, y=0.2,
-            ax=0, ay=60,
-            xref="paper", yref="paper",
-            showarrow=True,
-            arrowhead=3,
-            arrowsize=1,
-            arrowwidth=1.4,
-            arrowcolor="rgba(0,0,0,0.6)",
-        )
-    else:
-        fig.add_annotation(
-            x=0.73, y=-0.02,
-            ax=80, ay=0,
-            xref="paper", yref="paper",
-            showarrow=True,
-            arrowhead=3,
-            arrowsize=1,
-            arrowwidth=1.4,
-            arrowcolor="rgba(0,0,0,0.6)",
-        )
+    def _show_attacking_arrow(value: Optional[object]) -> bool:
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return value.strip().lower() not in ("no", "false", "0", "off")
+        return bool(value)
+
+    if _show_attacking_arrow(attackingarrow):
+        if orientation == "vertical":
+            fig.add_annotation(
+                x=0.97, y=0.2,
+                ax=0, ay=60,
+                xref="paper", yref="paper",
+                showarrow=True,
+                arrowhead=3,
+                arrowsize=1,
+                arrowwidth=1.4,
+                arrowcolor="rgba(0,0,0,0.6)",
+            )
+        else:
+            fig.add_annotation(
+                x=0.27, y=-0.02,
+                ax=-80, ay=0,
+                xref="paper", yref="paper",
+                showarrow=True,
+                arrowhead=3,
+                arrowsize=1,
+                arrowwidth=1.4,
+                arrowcolor="rgba(0,0,0,0.6)",
+            )
 
     if filtertype and filtertype[0] == "slider":
         fig.update_layout(
@@ -925,11 +934,11 @@ def build_canvas(
             fig.update_yaxes(range=[0.0, X_MAX], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
     else:
         if pitch_key == "full":
-            fig.update_xaxes(range=[60.0, -60.0], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[-60.0, 60.0], autorange=False, visible=False, fixedrange=True)
         elif pitch_key == "own half":
-            fig.update_xaxes(range=[5.0, X_MIN], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[X_MIN, 5.0], autorange=False, visible=False, fixedrange=True)
         else:  # opp half
-            fig.update_xaxes(range=[X_MAX, 0.0], autorange=False, visible=False, fixedrange=True)
+            fig.update_xaxes(range=[0.0, X_MAX], autorange=False, visible=False, fixedrange=True)
         fig.update_yaxes(range=[Y_MAX, Y_MIN], autorange=False, visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
 
     return fig

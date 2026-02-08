@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -232,6 +232,7 @@ def build_canvas(
     orientation: str,
     filtercontent: List[str],
     filtertype: List[str],
+    attackingarrow: Optional[object] = "yes",
 ) -> go.Figure:
     fig = go.Figure()
 
@@ -310,6 +311,37 @@ def build_canvas(
                 )
             ]
         )
+
+    def _show_attacking_arrow(value: Optional[object]) -> bool:
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return value.strip().lower() not in ("no", "false", "0", "off")
+        return bool(value)
+
+    if _show_attacking_arrow(attackingarrow):
+        if orientation == "vertical":
+            fig.add_annotation(
+                x=0.97, y=0.2,
+                ax=0, ay=60,
+                xref="paper", yref="paper",
+                showarrow=True,
+                arrowhead=3,
+                arrowsize=1,
+                arrowwidth=1.4,
+                arrowcolor="rgba(0,0,0,0.6)",
+            )
+        else:
+            fig.add_annotation(
+                x=0.27, y=-0.02,
+                ax=-80, ay=0,
+                xref="paper", yref="paper",
+                showarrow=True,
+                arrowhead=3,
+                arrowsize=1,
+                arrowwidth=1.4,
+                arrowcolor="rgba(0,0,0,0.6)",
+            )
 
     if orientation == "vertical":
         fig.update_xaxes(range=[Y_MAX, Y_MIN], autorange=False, visible=False, fixedrange=True)
