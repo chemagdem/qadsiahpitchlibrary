@@ -49,7 +49,8 @@ Defines coordinate system and default columns.
 
 - `grid` options:
   - `"none"` / `null`
-  - `"5x3"`, `"3x3"`, `"5x5"`, `"20x20"`
+  - Any `"NxM"` grid (e.g. `"8x8"`, `"4x12"`, `"3x9"`, `"20x20"`)
+    - `N` = vertical slices (along pitch length), `M` = horizontal slices (across pitch width)
   - `"set piece"`
   - `"wings"` (lane + third grid with box lines)
   - `"tactical"` (fixed tactical grid lines)
