@@ -231,6 +231,43 @@ def _build_full_pitch_line_traces(orientation="vertical"):
     sx, sy = _swap(0, 0)
     traces.append(go.Scatter(x=[sx], y=[sy], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
 
+    area_w = 40.32
+    area_d = 16.5
+    small_w = 18.32
+    small_d = 5.5
+
+    # Goal lines (small line behind each end line)
+    gx, gy = _swap(-3.66, X_MIN)
+    gx2, gy2 = _swap(3.66, X_MIN)
+    traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+    gx, gy = _swap(-3.66, X_MAX)
+    gx2, gy2 = _swap(3.66, X_MAX)
+    traces.append(go.Scatter(x=[gx, gx2], y=[gy, gy2], mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+
+    # Bottom penalty area + six-yard box + spot
+    rect = [(-area_w / 2, X_MIN), (area_w / 2, X_MIN), (area_w / 2, X_MIN + area_d),
+            (-area_w / 2, X_MIN + area_d), (-area_w / 2, X_MIN)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+    rect = [(-small_w / 2, X_MIN), (small_w / 2, X_MIN), (small_w / 2, X_MIN + small_d),
+            (-small_w / 2, X_MIN + small_d), (-small_w / 2, X_MIN)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+    px, py = _swap(0, X_MIN + 11.0)
+    traces.append(go.Scatter(x=[px], y=[py], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
+
+    # Top penalty area + six-yard box + spot
+    rect = [(-area_w / 2, X_MAX - area_d), (area_w / 2, X_MAX - area_d), (area_w / 2, X_MAX),
+            (-area_w / 2, X_MAX), (-area_w / 2, X_MAX - area_d)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+    rect = [(-small_w / 2, X_MAX - small_d), (small_w / 2, X_MAX - small_d), (small_w / 2, X_MAX),
+            (-small_w / 2, X_MAX), (-small_w / 2, X_MAX - small_d)]
+    xs, ys = zip(*[_swap(x, y) for x, y in rect])
+    traces.append(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=line_color, width=1), hoverinfo="skip", showlegend=False))
+    px, py = _swap(0, X_MAX - 11.0)
+    traces.append(go.Scatter(x=[px], y=[py], mode="markers", marker=dict(size=4, color="black"), hoverinfo="skip", showlegend=False))
+
     return traces
 
 
